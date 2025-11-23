@@ -76,12 +76,17 @@ Resources:
       - DynamoDBCrudPolicy:
           TableName:
             Ref: UserProfilesTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TryOnJobsTable
       Environment:
         Variables:
           STATE_MACHINE_ARN:
             Ref: TryOnOrchestrator
           USER_TABLE_NAME:
             Ref: UserProfilesTable
+          TABLE_NAME:
+            Ref: TryOnJobsTable
       Events:
         ApiTrigger:
           Type: HttpApi
@@ -194,6 +199,24 @@ Resources:
           - HEAD
           AllowedOrigins:
           - '*'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+  TryOnBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: TryOnBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal: '*'
+          Action: s3:GetObject
+          Resource:
+            Fn::Sub: ${TryOnBucket.Arn}/*
   TryOnOrchestrator:
     Type: AWS::Serverless::StateMachine
     Properties:

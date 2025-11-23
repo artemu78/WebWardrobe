@@ -39,6 +39,13 @@
           "BackoffRate": 2.0
         }
       ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.errorInfo",
+          "Next": "JobFailed"
+        }
+      ],
       "ResultPath": "$.aiResponse",
       "Next": "SaveResult"
     },
@@ -60,6 +67,19 @@
           "BackoffRate": 2
         }
       ],
+      "End": true
+    },
+    "JobFailed": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${ResultSaverFunctionArn}",
+        "Payload": {
+          "jobId.$": "$.jobId",
+          "status": "FAILED",
+          "error.$": "$.errorInfo"
+        }
+      },
       "End": true
     }
   }

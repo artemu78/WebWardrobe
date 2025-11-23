@@ -82,7 +82,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       // We can't programmatically open popup. We can alert or notify.
        chrome.notifications.create({
           type: 'basic',
-          iconUrl: 'icon.png',
+          iconUrl: chrome.runtime.getURL('logo.png'),
           title: 'WebWardrobe',
           message: 'Please open the extension popup to setup your profile.'
         });
@@ -91,7 +91,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 async function startTryOnJob(itemUrl, selfieId, token, tabId) {
   try {
-    console.log("Starting try-on job...");
+    console.log("Starting try-on job...", { itemUrl, selfieId });
     
     const response = await fetch(`${API_BASE_URL}/try-on`, {
       method: 'POST',
@@ -102,33 +102,79 @@ async function startTryOnJob(itemUrl, selfieId, token, tabId) {
       body: JSON.stringify({ itemUrl, selfieId })
     });
 
-    if (!response.ok) throw new Error("Failed to start job");
+    console.log("Response", response);
+    
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Server Error:", errorData);
+        throw new Error(errorData.error || `Server Error: ${response.status}`);
+    }
 
     const data = await response.json();
     const jobId = data.jobId;
     
-    chrome.notifications.create({
-      type: 'basic',
-      iconUrl: 'icon.png',
-      title: 'Try-On Started',
-      message: 'We are processing your request...'
+    try {
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('logo.png'),
+          title: 'Try-On Started',
+          message: 'We are processing your request...'
+        });
+    } catch (e) { console.error("Notification error:", e); }
+
+    // Notify content script to show overlay
+    chrome.tabs.sendMessage(tabId, {
+        action: "SHOW_PROCESSING",
+        originalUrl: itemUrl
     });
 
     pollStatus(jobId, itemUrl, tabId);
 
   } catch (error) {
     console.error("Error starting job:", error);
-    chrome.notifications.create({
-      type: 'basic',
-      iconUrl: 'icon.png',
-      title: 'Error',
-      message: 'Failed to start try-on.'
+    
+    try {
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('logo.png'),
+          title: 'Error',
+          message: error.message || 'Failed to start try-on.'
+        });
+    } catch (e) { console.error("Notification error:", e); }
+
+    chrome.tabs.sendMessage(tabId, {
+        action: "SHOW_ERROR",
+        originalUrl: itemUrl,
+        error: error.message || "Failed to start try-on"
     });
   }
 }
 
 function pollStatus(jobId, originalUrl, tabId) {
+  let attempts = 0;
+  const maxAttempts = 100; // 300 seconds = 5 minutes
+
   const intervalId = setInterval(async () => {
+    attempts++;
+    if (attempts > maxAttempts) {
+        clearInterval(intervalId);
+        console.error("Polling timed out");
+        
+        chrome.notifications.create({
+            type: 'basic',
+            iconUrl: chrome.runtime.getURL('logo.png'),
+            title: 'Try-On Timed Out',
+            message: 'The process took longer than 5 minutes. Please try again.'
+        });
+        
+        chrome.tabs.sendMessage(tabId, {
+            action: "SHOW_ERROR",
+            originalUrl: originalUrl,
+            error: "Timeout: Process took >5m. Please try again."
+        });
+        return;
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/status/${jobId}`);
       if (!response.ok) return; // Wait for next poll
@@ -146,7 +192,7 @@ function pollStatus(jobId, originalUrl, tabId) {
         
         chrome.notifications.create({
             type: 'basic',
-            iconUrl: 'icon.png',
+            iconUrl: chrome.runtime.getURL('logo.png'),
             title: 'Try-On Complete!',
             message: 'The image has been updated.'
         });
@@ -155,9 +201,15 @@ function pollStatus(jobId, originalUrl, tabId) {
         clearInterval(intervalId);
         chrome.notifications.create({
             type: 'basic',
-            iconUrl: 'icon.png',
+            iconUrl: chrome.runtime.getURL('logo.png'),
             title: 'Try-On Failed',
-            message: 'Something went wrong.'
+            message: data.error || 'Something went wrong.'
+        });
+        
+        chrome.tabs.sendMessage(tabId, {
+            action: "SHOW_ERROR",
+            originalUrl: originalUrl,
+            error: data.error || "Try-On Failed"
         });
       }
     } catch (e) {

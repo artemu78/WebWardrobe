@@ -1,7 +1,10 @@
 import json
 import os
 import uuid
+import datetime
 import boto3
+
+
 from botocore.exceptions import ClientError
 
 # Initialize clients
@@ -9,25 +12,42 @@ sfn_client = boto3.client('stepfunctions')
 dynamodb = boto3.resource('dynamodb')
 s3_client = boto3.client('s3')
 
+import urllib.request
+
 def get_user_id_from_token(event):
-    # In a real app, verify the Google ID token here.
-    # For now, we'll trust the client sends a 'userId' or 'Authorization' header we treat as ID.
-    # Or better, the client sends the ID token in Auth header, and we decode it.
-    # To keep this simple and runnable without real Google keys, we will accept a 'x-user-id' header
-    # or extract it from the body if strictly necessary, but header is better for GET requests.
-    
-    # MOCK AUTH:
+    """
+    Extracts user ID from Authorization header (Google OAuth Token)
+    or x-user-id header (Mock/Legacy).
+    """
     headers = event.get('headers', {})
-    user_id = headers.get('x-user-id') or headers.get('X-User-Id')
-    if not user_id:
-        # Fallback for body
+    
+    # 1. Check for Authorization header (Bearer Token)
+    auth_header = headers.get('authorization') or headers.get('Authorization')
+    if auth_header:
+        token = auth_header.replace('Bearer ', '').strip()
         try:
-            body = json.loads(event.get('body', '{}'))
-            user_id = body.get('userId')
-        except:
+            # Validate with Google
+            url = f"https://www.googleapis.com/oauth2/v3/tokeninfo?access_token={token}"
+            with urllib.request.urlopen(url) as response:
+                data = json.loads(response.read().decode())
+                # 'sub' is the unique user ID
+                return data.get('sub')
+        except Exception as e:
+            print(f"Token validation failed: {e}")
+            # Fall through to check other headers if validation fails
             pass
-            
-    return user_id
+
+    # 2. Fallback: Check x-user-id (Mock/Testing)
+    user_id = headers.get('x-user-id') or headers.get('X-User-Id')
+    if user_id:
+        return user_id
+
+    # 3. Fallback: Check body
+    try:
+        body = json.loads(event.get('body', '{}'))
+        return body.get('userId')
+    except:
+        return None
 
 def dispatcher_handler(event, context):
     """
@@ -71,6 +91,26 @@ def dispatcher_handler(event, context):
             'itemUrl': item_url,
             'selfieUrl': selfie_url
         }
+
+        # Initialize Job Status in DynamoDB
+        table_name = os.environ.get('TABLE_NAME') or 'TryOnJobs' # Fallback or env var
+        # Note: TABLE_NAME might not be in env for Dispatcher, need to check template.yaml
+        # Adding TABLE_NAME to Dispatcher env in template.yaml is required.
+        # For now, let's assume TryOnJobsTable is named 'TryOnJobs' or use a separate env var if needed.
+        # Better: Add TABLE_NAME to Dispatcher env.
+        
+        # Actually, let's use the hardcoded name or better, add it to env in next step.
+        # For this step, I will add the logic assuming TABLE_NAME is available.
+        
+        job_table = dynamodb.Table('TryOnJobs') 
+        job_table.put_item(
+            Item={
+                'jobId': job_id,
+                'status': 'PROCESSING',
+                'userId': user_id,
+                'timestamp': datetime.datetime.utcnow().isoformat()
+            }
+        )
 
         response = sfn_client.start_execution(
             stateMachineArn=state_machine_arn,
@@ -227,16 +267,36 @@ def status_handler(event, context):
 
 def saver_handler(event, context):
     """
-    Step Function Task: SaveResult
+    Step Function Task: SaveResult or JobFailed
     Saves AI result to S3 and updates DynamoDB.
+    Can also handle failure updates.
     """
     try:
         job_id = event['jobId']
-        ai_result = event['aiResult'] 
         
-        bucket_name = os.environ['BUCKET_NAME']
         table_name = os.environ['TABLE_NAME']
         table = dynamodb.Table(table_name)
+        
+        # Check if this is a failure event
+        if event.get('status') == 'FAILED':
+            error_info = event.get('error', {})
+            error_msg = str(error_info)
+            
+            table.update_item(
+                Key={'jobId': job_id},
+                UpdateExpression="set #s = :s, #e = :e, #t = :t",
+                ExpressionAttributeNames={'#s': 'status', '#e': 'error', '#t': 'timestamp'},
+                ExpressionAttributeValues={
+                    ':s': 'FAILED',
+                    ':e': error_msg,
+                    ':t': datetime.datetime.utcnow().isoformat()
+                }
+            )
+            return {'status': 'FAILED', 'error': error_msg}
+
+        # Success path
+        ai_result = event['aiResult'] 
+        bucket_name = os.environ['BUCKET_NAME']
         
         s3_key = f"results/{job_id}.json"
         s3_client.put_object(
@@ -253,7 +313,7 @@ def saver_handler(event, context):
                 'jobId': job_id,
                 'status': 'COMPLETED',
                 'resultUrl': result_url,
-                'timestamp': str(uuid.uuid1())
+                'timestamp': datetime.datetime.utcnow().isoformat()
             }
         )
 

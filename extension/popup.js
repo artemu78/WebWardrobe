@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const authSection = document.getElementById('auth-section');
   const mainSection = document.getElementById('main-section');
 
+  const logoutBtn = document.getElementById('logout-btn');
+
   // Check Auth
   chrome.identity.getAuthToken({ interactive: false }, function(token) {
     if (token) {
@@ -22,6 +24,26 @@ document.addEventListener('DOMContentLoaded', () => {
       showMain(token);
     });
   });
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      chrome.identity.getAuthToken({ interactive: false }, function(token) {
+        if (token) {
+          chrome.identity.removeCachedAuthToken({ token: token }, function() {
+            showLogin();
+          });
+        } else {
+          showLogin();
+        }
+      });
+    });
+  }
+
+  function showLogin() {
+    authSection.classList.remove('hidden');
+    mainSection.classList.add('hidden');
+    document.getElementById('image-list').innerHTML = '';
+  }
 
   function showMain(token) {
     authSection.classList.add('hidden');
@@ -49,9 +71,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Get Presigned URL
         const res1 = await fetch(`${API_BASE_URL}/user/images/upload-url`, {
           method: 'POST',
-          headers: { 'Authorization': token, 'Content-Type': 'application/json' }, // Send token in Auth header
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, // Send token in Auth header
           body: JSON.stringify({ filename: file.name, contentType: file.type })
         });
+        
+        if (res1.status === 401) {
+            throw new Error("Unauthorized. Please sign out and sign in again.");
+        }
+
         const data1 = await res1.json();
         
         if (!res1.ok) throw new Error(data1.error || 'Failed to get upload URL');
@@ -68,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMsg.textContent = "Saving profile...";
         const res3 = await fetch(`${API_BASE_URL}/user/images`, {
           method: 'POST',
-          headers: { 'Authorization': token, 'Content-Type': 'application/json' },
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: name,
             s3Key: data1.s3Key,
@@ -92,6 +119,10 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (e) {
         console.error(e);
         statusMsg.textContent = "Error: " + e.message;
+        if (e.message.includes("Unauthorized")) {
+             // Optional: Auto logout
+             // logoutBtn.click();
+        }
       } finally {
         uploadBtn.disabled = false;
       }
@@ -104,8 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     try {
       const res = await fetch(`${API_BASE_URL}/user/images`, {
-        headers: { 'Authorization': token } // Send token in Auth header
+        headers: { 'Authorization': `Bearer ${token}` } // Send token in Auth header
       });
+      
+      if (res.status === 401) {
+          listDiv.innerHTML = '<span style="color:red">Session expired. Please Sign Out.</span>';
+          return;
+      }
+
       const data = await res.json();
       
       listDiv.innerHTML = '';

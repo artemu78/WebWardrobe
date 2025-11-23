@@ -8,6 +8,7 @@ confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
 disable_rollback = true
 image_repositories = []
+parameter_overrides = "NanoBananaApiUrl=\"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent\""
 
 [default.global.parameters]
 region = "us-east-1"
