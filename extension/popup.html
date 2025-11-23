@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebWardrobe</title>
+  <style>
+    body { width: 320px; padding: 10px; font-family: sans-serif; }
+    .hidden { display: none; }
+    .image-item { display: flex; align-items: center; margin-bottom: 10px; border: 1px solid #eee; padding: 5px; border-radius: 5px; }
+    .image-item img { width: 40px; height: 40px; object-fit: cover; margin-right: 10px; border-radius: 4px; }
+    .btn { background-color: #4285f4; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; width: 100%; }
+    .btn:disabled { background-color: #ccc; }
+    input[type="text"], input[type="file"] { width: 100%; margin-bottom: 10px; box-sizing: border-box; padding: 5px; }
+    h3 { margin-top: 0; }
+  </style>
+</head>
+<body>
+  <div id="auth-section">
+    <div style="text-align: center; margin-bottom: 15px;">
+      <img src="logo.png" alt="WebWardrobe Logo" style="width: 64px; height: 64px;">
+    </div>
+    <h3>Welcome to WebWardrobe</h3>
+    <button id="login-btn" class="btn">Sign in with Google</button>
+  </div>
+
+  <div id="main-section" class="hidden">
+    <h3>Your Wardrobe</h3>
+    <div id="image-list"></div>
+    
+    <hr>
+    <h4>Add New Selfie</h4>
+    <input type="text" id="image-name" placeholder="Name (e.g., Blue Shirt)">
+    <input type="file" id="image-file" accept="image/*">
+    <button id="upload-btn" class="btn">Upload</button>
+    <p id="status-msg"></p>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

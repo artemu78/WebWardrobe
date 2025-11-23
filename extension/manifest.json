@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "WebWardrobe Virtual Try-On",
+  "version": "1.0",
+  "description": "Try on clothes from any website using your own photos.",
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab",
+    "scripting",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://*.amazonaws.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "logo.png",
+      "48": "logo.png",
+      "128": "logo.png"
+    }
+  },
+  "icons": {
+    "16": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
+  },
+  "oauth2": {
+    "client_id": "YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com",
+    "scopes": [
+      "openid", "email", "profile"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}

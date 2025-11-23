@@ -1,0 +1,66 @@
+{
+  "Comment": "Virtual Try-On Orchestrator using Native HTTP Task",
+  "StartAt": "PreparePayload",
+  "States": {
+    "PreparePayload": {
+      "Type": "Pass",
+      "Parameters": {
+        "jobId.$": "$.jobId",
+        "userId.$": "$.userId",
+        "itemUrl.$": "$.itemUrl",
+        "selfieUrl.$": "$.selfieUrl",
+        "apiPayload": {
+          "clothes_image_url.$": "$.itemUrl",
+          "user_image_url.$": "$.selfieUrl",
+          "user_id.$": "$.userId"
+        }
+      },
+      "Next": "CallAIModel"
+    },
+    "CallAIModel": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::http:invoke",
+      "Parameters": {
+        "ApiEndpoint": "${NanoBananaApiUrl}",
+        "Method": "POST",
+        "Headers": {
+          "Content-Type": "application/json"
+        },
+        "RequestBody.$": "$.apiPayload",
+        "Authentication": {
+          "ConnectionArn": "${ApiConnectionArn}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed", "States.Http.StatusCode.500"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "ResultPath": "$.aiResponse",
+      "Next": "SaveResult"
+    },
+    "SaveResult": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${ResultSaverFunctionArn}",
+        "Payload": {
+          "jobId.$": "$.jobId",
+          "aiResult.$": "$.aiResponse.ResponseBody"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    }
+  }
+}

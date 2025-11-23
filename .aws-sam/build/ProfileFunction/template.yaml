@@ -1,0 +1,232 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Virtual Try-On Backend
+  Serverless architecture with API Gateway, Lambda, Step Functions (Standard), and DynamoDB.
+  Includes User Profile management and Google Auth support.
+
+Parameters:
+  NanoBananaApiKey:
+    Type: String
+    Description: "API Key for the Nano-Banana Service"
+    NoEcho: true
+    Default: "dummy-key"
+
+Resources:
+  # -------------------------------------------------------------------------
+  # DynamoDB Tables
+  # -------------------------------------------------------------------------
+  TryOnJobsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: TryOnJobs
+      AttributeDefinitions:
+        - AttributeName: jobId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: jobId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  UserProfilesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: UserProfiles
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  # -------------------------------------------------------------------------
+  # API Gateway (HTTP API)
+  # -------------------------------------------------------------------------
+  TryOnApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: prod
+      CorsConfiguration:
+        AllowOrigins:
+          - "*" 
+        AllowMethods:
+          - POST
+          - GET
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+
+  # -------------------------------------------------------------------------
+  # EventBridge Connection (Required for Step Functions HTTP Task)
+  # -------------------------------------------------------------------------
+  ApiConnection:
+    Type: AWS::Events::Connection
+    Properties:
+      AuthorizationType: API_KEY
+      AuthParameters:
+        ApiKeyAuthParameters:
+          ApiKeyName: "x-goog-api-key" # Updated header name
+          ApiKeyValue: !Ref NanoBananaApiKey
+
+  # -------------------------------------------------------------------------
+  # Dispatcher Lambda (Trigger)
+  # -------------------------------------------------------------------------
+  DispatcherFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: dispatcher_lambda.dispatcher_handler
+      Runtime: python3.9
+      Policies:
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt TryOnOrchestrator.Name
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserProfilesTable
+      Environment:
+        Variables:
+          STATE_MACHINE_ARN: !Ref TryOnOrchestrator
+          USER_TABLE_NAME: !Ref UserProfilesTable
+      Events:
+        ApiTrigger:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TryOnApi
+            Path: /try-on
+            Method: POST
+
+  # -------------------------------------------------------------------------
+  # Profile Lambda (User Images)
+  # -------------------------------------------------------------------------
+  ProfileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: dispatcher_lambda.profile_handler
+      Runtime: python3.9
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserProfilesTable
+        - S3CrudPolicy:
+            BucketName: !Ref TryOnBucket
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Ref UserProfilesTable
+          BUCKET_NAME: !Ref TryOnBucket
+      Events:
+        GetUploadUrl:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TryOnApi
+            Path: /user/images/upload-url
+            Method: POST
+        ConfirmUpload:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TryOnApi
+            Path: /user/images
+            Method: POST
+        ListImages:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TryOnApi
+            Path: /user/images
+            Method: GET
+
+  # -------------------------------------------------------------------------
+  # Status Lambda (Polling)
+  # -------------------------------------------------------------------------
+  StatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: dispatcher_lambda.status_handler
+      Runtime: python3.9
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TryOnJobsTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TryOnJobsTable
+      Events:
+        StatusTrigger:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TryOnApi
+            Path: /status/{jobId}
+            Method: GET
+
+  # -------------------------------------------------------------------------
+  # Result Saver Lambda (Worker)
+  # -------------------------------------------------------------------------
+  ResultSaverFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: dispatcher_lambda.saver_handler
+      Runtime: python3.9
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref TryOnBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TryOnJobsTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TryOnJobsTable
+          BUCKET_NAME: !Ref TryOnBucket
+
+  # -------------------------------------------------------------------------
+  # S3 Bucket
+  # -------------------------------------------------------------------------
+  TryOnBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - HEAD
+            AllowedOrigins:
+              - "*"
+
+  # -------------------------------------------------------------------------
+  # Step Function (Orchestrator)
+  # -------------------------------------------------------------------------
+  TryOnOrchestrator:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine.asl.json
+      DefinitionSubstitutions:
+        ResultSaverFunctionArn: !GetAtt ResultSaverFunction.Arn
+        NanoBananaApiUrl: "https://api.nano-banana.com/v1/try-on"
+        ApiConnectionArn: !GetAtt ApiConnection.Arn
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ResultSaverFunction
+        - Statement:
+            - Effect: Allow
+              Action:
+                - states:InvokeHTTPEndpoint
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - events:RetrieveConnectionCredentials
+              Resource: !GetAtt ApiConnection.Arn
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+                - secretsmanager:DescribeSecret
+              Resource: !GetAtt ApiConnection.SecretArn
+
+Outputs:
+  ApiEndpoint:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${TryOnApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+  StateMachineArn:
+    Description: "Step Function ARN"
+    Value: !Ref TryOnOrchestrator
