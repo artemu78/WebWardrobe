@@ -45,6 +45,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('image-list').innerHTML = '';
   }
 
+  // Modal Logic
+  const modal = document.getElementById("image-modal");
+  const modalImg = document.getElementById("modal-img");
+  const span = document.getElementsByClassName("close")[0];
+
+  span.onclick = function() { 
+    modal.style.display = "none";
+  }
+  
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+
   function showMain(token) {
     authSection.classList.add('hidden');
     mainSection.classList.remove('hidden');
@@ -64,15 +79,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      statusMsg.textContent = "Getting upload URL...";
+      statusMsg.textContent = "Processing image...";
       uploadBtn.disabled = true;
 
       try {
-        // 1. Get Presigned URL
+        // 0. Generate Thumbnail
+        const thumbnailBlob = await resizeImage(file, 48, 48);
+
+        // 1. Get Presigned URLs (Original + Thumbnail)
+        statusMsg.textContent = "Getting upload URLs...";
         const res1 = await fetch(`${API_BASE_URL}/user/images/upload-url`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, // Send token in Auth header
-          body: JSON.stringify({ filename: file.name, contentType: file.type })
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+              filename: file.name, 
+              contentType: file.type,
+              includeThumbnail: true 
+          })
         });
         
         if (res1.status === 401) {
@@ -80,18 +103,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const data1 = await res1.json();
-        
         if (!res1.ok) throw new Error(data1.error || 'Failed to get upload URL');
 
-        // 2. Upload to S3
-        statusMsg.textContent = "Uploading image...";
+        // 2. Upload to S3 (Original)
+        statusMsg.textContent = "Uploading original...";
         await fetch(data1.uploadUrl, {
           method: 'PUT',
           body: file,
           headers: { 'Content-Type': file.type }
         });
 
-        // 3. Confirm
+        // 3. Upload to S3 (Thumbnail)
+        statusMsg.textContent = "Uploading thumbnail...";
+        await fetch(data1.thumbnailUploadUrl, {
+            method: 'PUT',
+            body: thumbnailBlob,
+            headers: { 'Content-Type': file.type }
+        });
+
+        // 4. Confirm
         statusMsg.textContent = "Saving profile...";
         const res3 = await fetch(`${API_BASE_URL}/user/images`, {
           method: 'POST',
@@ -99,7 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({
             name: name,
             s3Key: data1.s3Key,
-            fileId: data1.fileId
+            fileId: data1.fileId,
+            thumbnailS3Key: data1.thumbnailS3Key
           })
         });
         
@@ -119,10 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (e) {
         console.error(e);
         statusMsg.textContent = "Error: " + e.message;
-        if (e.message.includes("Unauthorized")) {
-             // Optional: Auto logout
-             // logoutBtn.click();
-        }
       } finally {
         uploadBtn.disabled = false;
       }
@@ -135,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     try {
       const res = await fetch(`${API_BASE_URL}/user/images`, {
-        headers: { 'Authorization': `Bearer ${token}` } // Send token in Auth header
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (res.status === 401) {
@@ -150,10 +177,46 @@ document.addEventListener('DOMContentLoaded', () => {
         data.images.forEach(img => {
           const div = document.createElement('div');
           div.className = 'image-item';
+          
+          // Use thumbnail if available, else original
+          const displayUrl = img.thumbnailUrl || img.s3Url;
+          
           div.innerHTML = `
-            <img src="${img.s3Url}" alt="${img.name}">
-            <span>${img.name}</span>
+            <div class="image-info" title="Click to view original">
+                <img src="${displayUrl}" alt="${img.name}">
+                <span>${img.name}</span>
+            </div>
+            <div class="image-actions">
+                <a href="${img.s3Url}" download="${img.name}" target="_blank" class="action-btn" title="Download">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </a>
+                <button class="action-btn delete-btn" data-id="${img.id}" title="Delete">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </div>
           `;
+          
+          // Click to view original
+          div.querySelector('.image-info').onclick = () => {
+              modal.style.display = "block";
+              modalImg.src = img.s3Url;
+          };
+
+          // Delete action
+          div.querySelector('.delete-btn').onclick = async (e) => {
+              e.stopPropagation();
+              if (confirm(`Delete "${img.name}"?`)) {
+                  await deleteImage(img.id, token);
+              }
+          };
+
           listDiv.appendChild(div);
         });
       } else {
@@ -162,5 +225,63 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       listDiv.textContent = "Failed to load images.";
     }
+  }
+
+  async function deleteImage(fileId, token) {
+      const listDiv = document.getElementById('image-list');
+      try {
+          const res = await fetch(`${API_BASE_URL}/user/images/${fileId}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (!res.ok) throw new Error("Failed to delete");
+          
+          loadImages(token); // Reload list
+          chrome.runtime.sendMessage({ action: "refreshContextMenu" });
+          
+      } catch (e) {
+          alert("Error deleting image: " + e.message);
+      }
+  }
+
+  function resizeImage(file, maxWidth, maxHeight) {
+    return new Promise((resolve, reject) => {
+        const img = document.createElement('img');
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            img.src = e.target.result;
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // Calculate aspect ratio
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, file.type);
+            };
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
   }
 });

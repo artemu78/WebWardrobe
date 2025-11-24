@@ -58,6 +58,7 @@ Resources:
         AllowMethods:
           - POST
           - GET
+          - DELETE
           - OPTIONS
         AllowHeaders:
           - Content-Type
@@ -141,6 +142,12 @@ Resources:
             ApiId: !Ref TryOnApi
             Path: /user/images
             Method: GET
+        DeleteImage:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TryOnApi
+            Path: /user/images/{fileId}
+            Method: DELETE
 
   # -------------------------------------------------------------------------
   # Status Lambda (Polling)

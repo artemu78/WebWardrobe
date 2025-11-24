@@ -155,24 +155,39 @@ def profile_handler(event, context):
             body = json.loads(event.get('body', '{}'))
             filename = body.get('filename')
             content_type = body.get('contentType', 'image/jpeg')
+            include_thumbnail = body.get('includeThumbnail', False)
             
             file_id = str(uuid.uuid4())
             s3_key = f"uploads/{user_id}/{file_id}-{filename}"
             
-            # Generate Presigned URL
+            # Generate Presigned URL for Original
             url = s3_client.generate_presigned_url(
                 'put_object',
                 Params={'Bucket': bucket_name, 'Key': s3_key, 'ContentType': content_type},
                 ExpiresIn=300
             )
             
+            response_data = {
+                'uploadUrl': url,
+                's3Key': s3_key,
+                'fileId': file_id
+            }
+
+            # Generate Presigned URL for Thumbnail if requested
+            if include_thumbnail:
+                thumb_filename = f"thumb-{filename}"
+                thumb_s3_key = f"uploads/{user_id}/{file_id}-{thumb_filename}"
+                thumb_url = s3_client.generate_presigned_url(
+                    'put_object',
+                    Params={'Bucket': bucket_name, 'Key': thumb_s3_key, 'ContentType': content_type},
+                    ExpiresIn=300
+                )
+                response_data['thumbnailUploadUrl'] = thumb_url
+                response_data['thumbnailS3Key'] = thumb_s3_key
+            
             return {
                 'statusCode': 200,
-                'body': json.dumps({
-                    'uploadUrl': url,
-                    's3Key': s3_key,
-                    'fileId': file_id
-                })
+                'body': json.dumps(response_data)
             }
 
         # POST /user/images (Confirm upload)
@@ -181,6 +196,7 @@ def profile_handler(event, context):
             name = body.get('name')
             s3_key = body.get('s3Key')
             file_id = body.get('fileId')
+            thumbnail_s3_key = body.get('thumbnailS3Key')
             
             if not name or not s3_key or not file_id:
                 return {'statusCode': 400, 'body': json.dumps({'error': 'Missing fields'})}
@@ -193,18 +209,24 @@ def profile_handler(event, context):
 
             s3_url = f"https://{bucket_name}.s3.amazonaws.com/{s3_key}"
             
+            new_image_item = {
+                'id': file_id,
+                'name': name,
+                's3Url': s3_url,
+                's3Key': s3_key
+            }
+
+            if thumbnail_s3_key:
+                new_image_item['thumbnailS3Key'] = thumbnail_s3_key
+                new_image_item['thumbnailUrl'] = f"https://{bucket_name}.s3.amazonaws.com/{thumbnail_s3_key}"
+
             # Add to DynamoDB list
             user_table.update_item(
                 Key={'userId': user_id},
                 UpdateExpression="SET #i = list_append(if_not_exists(#i, :empty_list), :new_image)",
                 ExpressionAttributeNames={'#i': 'images'},
                 ExpressionAttributeValues={
-                    ':new_image': [{
-                        'id': file_id,
-                        'name': name,
-                        's3Url': s3_url,
-                        's3Key': s3_key
-                    }],
+                    ':new_image': [new_image_item],
                     ':empty_list': []
                 }
             )
@@ -222,6 +244,55 @@ def profile_handler(event, context):
             return {
                 'statusCode': 200,
                 'body': json.dumps({'images': images})
+            }
+
+        # DELETE /user/images/{fileId}
+        elif method == 'DELETE':
+            # Extract fileId from path
+            # Path format: /user/images/{fileId}
+            # We need to parse it manually or rely on path parameters if configured
+            # Since we use rawPath, let's parse.
+            parts = path.split('/')
+            if len(parts) < 4:
+                 return {'statusCode': 400, 'body': json.dumps({'error': 'Invalid path'})}
+            
+            file_id = parts[-1]
+            
+            # Get current images
+            response = user_table.get_item(Key={'userId': user_id})
+            item = response.get('Item', {})
+            images = item.get('images', [])
+            
+            # Find image to remove
+            image_to_remove = next((img for img in images if img['id'] == file_id), None)
+            
+            if not image_to_remove:
+                return {'statusCode': 404, 'body': json.dumps({'error': 'Image not found'})}
+            
+            # Remove from S3
+            try:
+                s3_client.delete_object(Bucket=bucket_name, Key=image_to_remove['s3Key'])
+                if 'thumbnailS3Key' in image_to_remove:
+                    s3_client.delete_object(Bucket=bucket_name, Key=image_to_remove['thumbnailS3Key'])
+            except Exception as e:
+                print(f"Failed to delete from S3: {e}")
+                # Continue to remove from DB even if S3 fails
+            
+            # Remove from DynamoDB
+            # We have to read-modify-write or use REMOVE with index if we knew the index.
+            # Since list is small (max 5), read-modify-write is fine and safer.
+            new_images = [img for img in images if img['id'] != file_id]
+            
+            user_table.update_item(
+                Key={'userId': user_id},
+                UpdateExpression="SET #i = :new_images",
+                ExpressionAttributeNames={'#i': 'images'},
+                ExpressionAttributeValues={':new_images': new_images}
+            )
+            
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'message': 'Image deleted'})
             }
 
         else:
@@ -290,7 +361,12 @@ def generator_handler(event, context):
             encoded_path = urllib.parse.quote(parsed.path)
             encoded_url = urllib.parse.urlunparse(parsed._replace(path=encoded_path))
             
-            with urllib.request.urlopen(encoded_url) as response:
+            req = urllib.request.Request(
+                encoded_url, 
+                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+            )
+            
+            with urllib.request.urlopen(req) as response:
                 return base64.b64encode(response.read()).decode('utf-8')
 
         print(f"Downloading images for job {job_id}")

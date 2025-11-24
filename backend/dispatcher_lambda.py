@@ -246,6 +246,55 @@ def profile_handler(event, context):
                 'body': json.dumps({'images': images})
             }
 
+        # DELETE /user/images/{fileId}
+        elif method == 'DELETE':
+            # Extract fileId from path
+            # Path format: /user/images/{fileId}
+            # We need to parse it manually or rely on path parameters if configured
+            # Since we use rawPath, let's parse.
+            parts = path.split('/')
+            if len(parts) < 4:
+                 return {'statusCode': 400, 'body': json.dumps({'error': 'Invalid path'})}
+            
+            file_id = parts[-1]
+            
+            # Get current images
+            response = user_table.get_item(Key={'userId': user_id})
+            item = response.get('Item', {})
+            images = item.get('images', [])
+            
+            # Find image to remove
+            image_to_remove = next((img for img in images if img['id'] == file_id), None)
+            
+            if not image_to_remove:
+                return {'statusCode': 404, 'body': json.dumps({'error': 'Image not found'})}
+            
+            # Remove from S3
+            try:
+                s3_client.delete_object(Bucket=bucket_name, Key=image_to_remove['s3Key'])
+                if 'thumbnailS3Key' in image_to_remove:
+                    s3_client.delete_object(Bucket=bucket_name, Key=image_to_remove['thumbnailS3Key'])
+            except Exception as e:
+                print(f"Failed to delete from S3: {e}")
+                # Continue to remove from DB even if S3 fails
+            
+            # Remove from DynamoDB
+            # We have to read-modify-write or use REMOVE with index if we knew the index.
+            # Since list is small (max 5), read-modify-write is fine and safer.
+            new_images = [img for img in images if img['id'] != file_id]
+            
+            user_table.update_item(
+                Key={'userId': user_id},
+                UpdateExpression="SET #i = :new_images",
+                ExpressionAttributeNames={'#i': 'images'},
+                ExpressionAttributeValues={':new_images': new_images}
+            )
+            
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'message': 'Image deleted'})
+            }
+
         else:
             return {'statusCode': 404, 'body': json.dumps({'error': 'Not found'})}
 
@@ -312,7 +361,12 @@ def generator_handler(event, context):
             encoded_path = urllib.parse.quote(parsed.path)
             encoded_url = urllib.parse.urlunparse(parsed._replace(path=encoded_path))
             
-            with urllib.request.urlopen(encoded_url) as response:
+            req = urllib.request.Request(
+                encoded_url, 
+                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+            )
+            
+            with urllib.request.urlopen(req) as response:
                 return base64.b64encode(response.read()).decode('utf-8')
 
         print(f"Downloading images for job {job_id}")
