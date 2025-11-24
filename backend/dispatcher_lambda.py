@@ -3,6 +3,8 @@ import os
 import uuid
 import datetime
 import boto3
+import base64
+import urllib.parse
 
 
 from botocore.exceptions import ClientError
@@ -89,7 +91,8 @@ def dispatcher_handler(event, context):
             'jobId': job_id,
             'userId': user_id,
             'itemUrl': item_url,
-            'selfieUrl': selfie_url
+            'selfieUrl': selfie_url,
+            'selfieId': selfie_id
         }
 
         # Initialize Job Status in DynamoDB
@@ -142,8 +145,29 @@ def profile_handler(event, context):
         bucket_name = os.environ['BUCKET_NAME']
         user_table = dynamodb.Table(user_table_name)
 
+        # GET /user/generations
+        if method == 'GET' and 'generations' in path:
+            generations_table_name = os.environ['USER_GENERATIONS_TABLE_NAME']
+            gen_table = dynamodb.Table(generations_table_name)
+
+            # Query generations for the user
+            # Since timestamp is the sort key, we can query by userId
+            try:
+                response = gen_table.query(
+                    KeyConditionExpression=boto3.dynamodb.conditions.Key('userId').eq(user_id),
+                    ScanIndexForward=False  # Newest first
+                )
+                items = response.get('Items', [])
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({'generations': items})
+                }
+            except Exception as e:
+                print(f"Error fetching generations: {e}")
+                return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+
         # POST /user/images/upload-url
-        if method == 'POST' and 'upload-url' in path:
+        elif method == 'POST' and 'upload-url' in path:
             body = json.loads(event.get('body', '{}'))
             filename = body.get('filename')
             content_type = body.get('contentType', 'image/jpeg')
@@ -222,6 +246,31 @@ def profile_handler(event, context):
                     ':empty_list': []
                 }
             )
+
+            # Store Base64 in UserSelfiesTable
+            try:
+                selfies_table_name = os.environ['USER_SELFIES_TABLE_NAME']
+                selfies_table = dynamodb.Table(selfies_table_name)
+
+                # Download from S3
+                # We need to construct the s3 object key properly or use the one we have
+                # s3_key is available
+                s3_response = s3_client.get_object(Bucket=bucket_name, Key=s3_key)
+                image_content = s3_response['Body'].read()
+                base64_data = base64.b64encode(image_content).decode('utf-8')
+
+                selfies_table.put_item(
+                    Item={
+                        'imageId': file_id,
+                        'base64Data': base64_data,
+                        'userId': user_id,
+                        'timestamp': datetime.datetime.utcnow().isoformat()
+                    }
+                )
+            except Exception as e:
+                print(f"Error saving to Selfies table: {e}")
+                # We don't fail the request if this fails, but we should log it.
+                # In a real system, we might want to retry or fail.
             
             return {
                 'statusCode': 200,
@@ -334,10 +383,6 @@ def status_handler(event, context):
             'body': json.dumps({'error': str(e)})
         }
 
-import base64
-import urllib.request
-import urllib.parse
-
 def generator_handler(event, context):
     """
     Step Function Task: GenerateImage
@@ -347,6 +392,7 @@ def generator_handler(event, context):
         job_id = event['jobId']
         item_url = event['itemUrl']
         selfie_url = event['selfieUrl']
+        selfie_id = event.get('selfieId')
         
         api_key = os.environ['GEMINI_API_KEY']
         api_url = os.environ['GEMINI_API_URL']
@@ -369,7 +415,24 @@ def generator_handler(event, context):
 
         print(f"Downloading images for job {job_id}")
         item_b64 = download_as_base64(item_url)
-        selfie_b64 = download_as_base64(selfie_url)
+
+        selfie_b64 = None
+        # Try to get selfie from DynamoDB if selfieId is provided
+        if selfie_id:
+            try:
+                selfies_table_name = os.environ['USER_SELFIES_TABLE_NAME']
+                selfies_table = dynamodb.Table(selfies_table_name)
+                response = selfies_table.get_item(Key={'imageId': selfie_id})
+                if 'Item' in response and 'base64Data' in response['Item']:
+                    print("Retrieved selfie from DynamoDB")
+                    selfie_b64 = response['Item']['base64Data']
+            except Exception as e:
+                print(f"Error fetching from Selfies table: {e}")
+
+        # Fallback to download
+        if not selfie_b64:
+             print("Downloading selfie from S3")
+             selfie_b64 = download_as_base64(selfie_url)
 
         # Construct Payload for Gemini
         payload = {
@@ -456,6 +519,7 @@ def saver_handler(event, context):
     """
     try:
         job_id = event['jobId']
+        user_id = event.get('userId')
         table_name = os.environ['TABLE_NAME']
         table = dynamodb.Table(table_name)
         
@@ -479,14 +543,34 @@ def saver_handler(event, context):
         # 2. Handle Success (Result already in S3 from Generator)
         if 'resultUrl' in event:
             result_url = event['resultUrl']
+            timestamp = datetime.datetime.utcnow().isoformat()
+
+            # Update Jobs Table
             table.put_item(
                 Item={
                     'jobId': job_id,
                     'status': 'COMPLETED',
                     'resultUrl': result_url,
-                    'timestamp': datetime.datetime.utcnow().isoformat()
+                    'timestamp': timestamp
                 }
             )
+
+            # Save to User Generations History
+            if user_id:
+                try:
+                    gen_table_name = os.environ['USER_GENERATIONS_TABLE_NAME']
+                    gen_table = dynamodb.Table(gen_table_name)
+                    gen_table.put_item(
+                        Item={
+                            'userId': user_id,
+                            'timestamp': timestamp,
+                            'jobId': job_id,
+                            'resultUrl': result_url
+                        }
+                    )
+                except Exception as e:
+                    print(f"Error saving generation history: {e}")
+
             return {'status': 'COMPLETED', 'resultUrl': result_url}
 
         # 3. Legacy/Fallback (If passed raw AI result, not used anymore but kept for safety)

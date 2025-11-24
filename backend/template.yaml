@@ -45,6 +45,34 @@ Resources:
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
 
+  UserSelfiesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: UserSelfies
+      AttributeDefinitions:
+        - AttributeName: imageId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: imageId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  UserGenerationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: UserGenerations
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
   # -------------------------------------------------------------------------
   # API Gateway (HTTP API)
   # -------------------------------------------------------------------------
@@ -117,11 +145,17 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserProfilesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserSelfiesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserGenerationsTable
         - S3CrudPolicy:
             BucketName: !Ref TryOnBucket
       Environment:
         Variables:
           USER_TABLE_NAME: !Ref UserProfilesTable
+          USER_SELFIES_TABLE_NAME: !Ref UserSelfiesTable
+          USER_GENERATIONS_TABLE_NAME: !Ref UserGenerationsTable
           BUCKET_NAME: !Ref TryOnBucket
       Events:
         GetUploadUrl:
@@ -141,6 +175,12 @@ Resources:
           Properties:
             ApiId: !Ref TryOnApi
             Path: /user/images
+            Method: GET
+        ListGenerations:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TryOnApi
+            Path: /user/generations
             Method: GET
         DeleteImage:
           Type: HttpApi
@@ -185,9 +225,12 @@ Resources:
       Policies:
         - S3CrudPolicy:
             BucketName: !Ref TryOnBucket
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserSelfiesTable
       Environment:
         Variables:
           BUCKET_NAME: !Ref TryOnBucket
+          USER_SELFIES_TABLE_NAME: !Ref UserSelfiesTable
           GEMINI_API_KEY: !Ref NanoBananaApiKey
           GEMINI_API_URL: !Ref NanoBananaApiUrl
 
@@ -205,9 +248,12 @@ Resources:
             BucketName: !Ref TryOnBucket
         - DynamoDBCrudPolicy:
             TableName: !Ref TryOnJobsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserGenerationsTable
       Environment:
         Variables:
           TABLE_NAME: !Ref TryOnJobsTable
+          USER_GENERATIONS_TABLE_NAME: !Ref UserGenerationsTable
           BUCKET_NAME: !Ref TryOnBucket
 
   # -------------------------------------------------------------------------

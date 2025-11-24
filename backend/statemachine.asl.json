@@ -9,6 +9,7 @@
         "userId.$": "$.userId",
         "itemUrl.$": "$.itemUrl",
         "selfieUrl.$": "$.selfieUrl",
+        "selfieId.$": "$.selfieId",
         "apiPayload": {
           "clothes_image_url.$": "$.itemUrl",
           "user_image_url.$": "$.selfieUrl",
@@ -25,7 +26,8 @@
         "Payload": {
           "jobId.$": "$.jobId",
           "itemUrl.$": "$.itemUrl",
-          "selfieUrl.$": "$.selfieUrl"
+          "selfieUrl.$": "$.selfieUrl",
+          "selfieId.$": "$.selfieId"
         }
       },
       "Retry": [
@@ -53,6 +55,7 @@
         "FunctionName": "${ResultSaverFunctionArn}",
         "Payload": {
           "jobId.$": "$.jobId",
+          "userId.$": "$.userId",
           "resultUrl.$": "$.generationResult.Payload.resultUrl"
         }
       },
