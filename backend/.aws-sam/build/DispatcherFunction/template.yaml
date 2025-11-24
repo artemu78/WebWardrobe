@@ -166,6 +166,25 @@ Resources:
             Method: GET
 
   # -------------------------------------------------------------------------
+  # Generator Lambda (Gemini Integration)
+  # -------------------------------------------------------------------------
+  GeneratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: dispatcher_lambda.generator_handler
+      Runtime: python3.9
+      Timeout: 60 # Give it time to download and generate
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref TryOnBucket
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref TryOnBucket
+          GEMINI_API_KEY: !Ref NanoBananaApiKey
+          GEMINI_API_URL: !Ref NanoBananaApiUrl
+
+  # -------------------------------------------------------------------------
   # Result Saver Lambda (Worker)
   # -------------------------------------------------------------------------
   ResultSaverFunction:
@@ -228,25 +247,13 @@ Resources:
       DefinitionUri: statemachine.asl.json
       DefinitionSubstitutions:
         ResultSaverFunctionArn: !GetAtt ResultSaverFunction.Arn
+        GeneratorFunctionArn: !GetAtt GeneratorFunction.Arn
         NanoBananaApiUrl: !Ref NanoBananaApiUrl
-        ApiConnectionArn: !GetAtt ApiConnection.Arn
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref ResultSaverFunction
-        - Statement:
-            - Effect: Allow
-              Action:
-                - states:InvokeHTTPEndpoint
-              Resource: "*"
-            - Effect: Allow
-              Action:
-                - events:RetrieveConnectionCredentials
-              Resource: !GetAtt ApiConnection.Arn
-            - Effect: Allow
-              Action:
-                - secretsmanager:GetSecretValue
-                - secretsmanager:DescribeSecret
-              Resource: !GetAtt ApiConnection.SecretArn
+        - LambdaInvokePolicy:
+            FunctionName: !Ref GeneratorFunction
 
 Outputs:
   ApiEndpoint:

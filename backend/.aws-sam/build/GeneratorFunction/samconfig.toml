@@ -1,0 +1,14 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "web-wardrobe-backend"
+resolve_s3 = true
+s3_prefix = "web-wardrobe-backend"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = []
+parameter_overrides = "NanoBananaApiUrl=\"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent\""
+
+[default.global.parameters]
+region = "us-east-1"

@@ -15,28 +15,25 @@
           "user_id.$": "$.userId"
         }
       },
-      "Next": "CallAIModel"
+      "Next": "GenerateImage"
     },
-    "CallAIModel": {
+    "GenerateImage": {
       "Type": "Task",
-      "Resource": "arn:aws:states:::http:invoke",
+      "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
-        "ApiEndpoint": "${NanoBananaApiUrl}",
-        "Method": "POST",
-        "Headers": {
-          "Content-Type": "application/json"
-        },
-        "RequestBody.$": "$.apiPayload",
-        "Authentication": {
-          "ConnectionArn": "${ApiConnectionArn}"
+        "FunctionName": "${GeneratorFunctionArn}",
+        "Payload": {
+          "jobId.$": "$.jobId",
+          "itemUrl.$": "$.itemUrl",
+          "selfieUrl.$": "$.selfieUrl"
         }
       },
       "Retry": [
         {
-          "ErrorEquals": ["States.TaskFailed", "States.Http.StatusCode.500"],
+          "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
           "IntervalSeconds": 2,
           "MaxAttempts": 3,
-          "BackoffRate": 2.0
+          "BackoffRate": 2
         }
       ],
       "Catch": [
@@ -46,7 +43,7 @@
           "Next": "JobFailed"
         }
       ],
-      "ResultPath": "$.aiResponse",
+      "ResultPath": "$.generationResult",
       "Next": "SaveResult"
     },
     "SaveResult": {
@@ -56,7 +53,7 @@
         "FunctionName": "${ResultSaverFunctionArn}",
         "Payload": {
           "jobId.$": "$.jobId",
-          "aiResult.$": "$.aiResponse.ResponseBody"
+          "resultUrl.$": "$.generationResult.Payload.resultUrl"
         }
       },
       "Retry": [

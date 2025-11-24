@@ -164,6 +164,27 @@ Resources:
             Method: GET
     Metadata:
       SamResourceId: StatusFunction
+  GeneratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: GeneratorFunction
+      Handler: dispatcher_lambda.generator_handler
+      Runtime: python3.9
+      Timeout: 60
+      Policies:
+      - S3CrudPolicy:
+          BucketName:
+            Ref: TryOnBucket
+      Environment:
+        Variables:
+          BUCKET_NAME:
+            Ref: TryOnBucket
+          GEMINI_API_KEY:
+            Ref: NanoBananaApiKey
+          GEMINI_API_URL:
+            Ref: NanoBananaApiUrl
+    Metadata:
+      SamResourceId: GeneratorFunction
   ResultSaverFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -226,36 +247,19 @@ Resources:
           Fn::GetAtt:
           - ResultSaverFunction
           - Arn
+        GeneratorFunctionArn:
+          Fn::GetAtt:
+          - GeneratorFunction
+          - Arn
         NanoBananaApiUrl:
           Ref: NanoBananaApiUrl
-        ApiConnectionArn:
-          Fn::GetAtt:
-          - ApiConnection
-          - Arn
       Policies:
       - LambdaInvokePolicy:
           FunctionName:
             Ref: ResultSaverFunction
-      - Statement:
-        - Effect: Allow
-          Action:
-          - states:InvokeHTTPEndpoint
-          Resource: '*'
-        - Effect: Allow
-          Action:
-          - events:RetrieveConnectionCredentials
-          Resource:
-            Fn::GetAtt:
-            - ApiConnection
-            - Arn
-        - Effect: Allow
-          Action:
-          - secretsmanager:GetSecretValue
-          - secretsmanager:DescribeSecret
-          Resource:
-            Fn::GetAtt:
-            - ApiConnection
-            - SecretArn
+      - LambdaInvokePolicy:
+          FunctionName:
+            Ref: GeneratorFunction
 Outputs:
   ApiEndpoint:
     Description: API Gateway endpoint URL

@@ -7,6 +7,6 @@ architecture = "x86_64"
 handler = "dispatcher_lambda.dispatcher_handler"
 manifest_hash = ""
 packagetype = "Zip"
-functions = ["DispatcherFunction", "ProfileFunction", "StatusFunction", "ResultSaverFunction"]
+functions = ["DispatcherFunction", "ProfileFunction", "StatusFunction", "GeneratorFunction", "ResultSaverFunction"]
 
 [layer_build_definitions]

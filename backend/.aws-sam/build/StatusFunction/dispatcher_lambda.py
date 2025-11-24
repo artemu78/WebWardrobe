@@ -265,19 +265,114 @@ def status_handler(event, context):
             'body': json.dumps({'error': str(e)})
         }
 
-def saver_handler(event, context):
+import base64
+import urllib.request
+import urllib.parse
+
+def generator_handler(event, context):
     """
-    Step Function Task: SaveResult or JobFailed
-    Saves AI result to S3 and updates DynamoDB.
-    Can also handle failure updates.
+    Step Function Task: GenerateImage
+    Downloads images, calls Gemini API, saves result to S3.
     """
     try:
         job_id = event['jobId']
+        item_url = event['itemUrl']
+        selfie_url = event['selfieUrl']
         
+        api_key = os.environ['GEMINI_API_KEY']
+        api_url = os.environ['GEMINI_API_URL']
+        bucket_name = os.environ['BUCKET_NAME']
+
+        def download_as_base64(url):
+            # Encode URL to handle spaces and special characters
+            # We only encode the path part to preserve protocol and domain
+            parsed = urllib.parse.urlparse(url)
+            encoded_path = urllib.parse.quote(parsed.path)
+            encoded_url = urllib.parse.urlunparse(parsed._replace(path=encoded_path))
+            
+            with urllib.request.urlopen(encoded_url) as response:
+                return base64.b64encode(response.read()).decode('utf-8')
+
+        print(f"Downloading images for job {job_id}")
+        item_b64 = download_as_base64(item_url)
+        selfie_b64 = download_as_base64(selfie_url)
+
+        # Construct Payload for Gemini
+        payload = {
+            "contents": [{
+                "parts": [
+                    {"text": "Generate a photorealistic image of the person from the first image wearing the clothes from the second image. Maintain the pose and lighting of the person."},
+                    {"inline_data": {"mime_type": "image/jpeg", "data": selfie_b64}},
+                    {"inline_data": {"mime_type": "image/jpeg", "data": item_b64}}
+                ]
+            }],
+             "generationConfig": {
+                "responseModalities": ["IMAGE"],
+                "imageConfig": {
+                  "aspectRatio": "3:4",
+                  "imageSize": "1024x1024" 
+                }
+              }
+        }
+        
+        print("Calling Gemini API...")
+        req = urllib.request.Request(
+            api_url,
+            data=json.dumps(payload).encode('utf-8'),
+            headers={'Content-Type': 'application/json', 'x-goog-api-key': api_key}
+        )
+        
+        with urllib.request.urlopen(req) as response:
+            response_data = json.loads(response.read().decode('utf-8'))
+            
+        # Extract Image
+        candidates = response_data.get('candidates', [])
+        if not candidates:
+            print("Gemini Response:", response_data)
+            raise Exception("No candidates returned from Gemini")
+            
+        parts = candidates[0].get('content', {}).get('parts', [])
+        image_b64 = next((p['inlineData']['data'] for p in parts if 'inlineData' in p), None)
+        
+        if not image_b64:
+             print("Gemini Response:", response_data)
+             raise Exception("No image found in Gemini response")
+
+        # Decode and Save to S3
+        print("Saving result to S3...")
+        image_data = base64.b64decode(image_b64)
+        s3_key = f"results/{job_id}.png"
+        
+        s3_client.put_object(
+            Bucket=bucket_name,
+            Key=s3_key,
+            Body=image_data,
+            ContentType='image/png'
+        )
+        
+        result_url = f"https://{bucket_name}.s3.amazonaws.com/{s3_key}"
+        
+        return {
+            'jobId': job_id,
+            'status': 'COMPLETED', 
+            'resultUrl': result_url
+        }
+
+    except Exception as e:
+        print(f"Generator failed: {e}")
+        raise e
+
+def saver_handler(event, context):
+    """
+    Step Function Task: SaveResult or JobFailed
+    Updates DynamoDB with the result or error.
+    """
+    try:
+        job_id = event['jobId']
         table_name = os.environ['TABLE_NAME']
         table = dynamodb.Table(table_name)
         
-        # Check if this is a failure event
+        # 1. Handle Failure
         if event.get('status') == 'FAILED':
             error_info = event.get('error', {})
             error_msg = str(error_info)
@@ -294,30 +389,43 @@ def saver_handler(event, context):
             )
             return {'status': 'FAILED', 'error': error_msg}
 
-        # Success path
-        ai_result = event['aiResult'] 
-        bucket_name = os.environ['BUCKET_NAME']
-        
-        s3_key = f"results/{job_id}.json"
-        s3_client.put_object(
-            Bucket=bucket_name,
-            Key=s3_key,
-            Body=json.dumps(ai_result),
-            ContentType='application/json'
-        )
-        
-        result_url = f"https://{bucket_name}.s3.amazonaws.com/{s3_key}"
+        # 2. Handle Success (Result already in S3 from Generator)
+        if 'resultUrl' in event:
+            result_url = event['resultUrl']
+            table.put_item(
+                Item={
+                    'jobId': job_id,
+                    'status': 'COMPLETED',
+                    'resultUrl': result_url,
+                    'timestamp': datetime.datetime.utcnow().isoformat()
+                }
+            )
+            return {'status': 'COMPLETED', 'resultUrl': result_url}
 
-        table.put_item(
-            Item={
-                'jobId': job_id,
-                'status': 'COMPLETED',
-                'resultUrl': result_url,
-                'timestamp': datetime.datetime.utcnow().isoformat()
-            }
-        )
-
-        return {'status': 'COMPLETED', 'resultUrl': result_url}
+        # 3. Legacy/Fallback (If passed raw AI result, not used anymore but kept for safety)
+        if 'aiResult' in event:
+            ai_result = event['aiResult'] 
+            bucket_name = os.environ['BUCKET_NAME']
+            
+            s3_key = f"results/{job_id}.json"
+            s3_client.put_object(
+                Bucket=bucket_name,
+                Key=s3_key,
+                Body=json.dumps(ai_result),
+                ContentType='application/json'
+            )
+            
+            result_url = f"https://{bucket_name}.s3.amazonaws.com/{s3_key}"
+    
+            table.put_item(
+                Item={
+                    'jobId': job_id,
+                    'status': 'COMPLETED',
+                    'resultUrl': result_url,
+                    'timestamp': datetime.datetime.utcnow().isoformat()
+                }
+            )
+            return {'status': 'COMPLETED', 'resultUrl': result_url}
 
     except Exception as e:
         print(f"Error in saver: {e}")

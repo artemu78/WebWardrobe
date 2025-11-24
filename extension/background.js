@@ -82,7 +82,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       // We can't programmatically open popup. We can alert or notify.
        chrome.notifications.create({
           type: 'basic',
-          iconUrl: chrome.runtime.getURL('logo.png'),
+          iconUrl: chrome.runtime.getURL('logo.jpg'),
           title: 'WebWardrobe',
           message: 'Please open the extension popup to setup your profile.'
         });
@@ -116,7 +116,7 @@ async function startTryOnJob(itemUrl, selfieId, token, tabId) {
     try {
         chrome.notifications.create({
           type: 'basic',
-          iconUrl: chrome.runtime.getURL('logo.png'),
+          iconUrl: chrome.runtime.getURL('logo.jpg'),
           title: 'Try-On Started',
           message: 'We are processing your request...'
         });
@@ -136,7 +136,7 @@ async function startTryOnJob(itemUrl, selfieId, token, tabId) {
     try {
         chrome.notifications.create({
           type: 'basic',
-          iconUrl: chrome.runtime.getURL('logo.png'),
+          iconUrl: chrome.runtime.getURL('logo.jpg'),
           title: 'Error',
           message: error.message || 'Failed to start try-on.'
         });
@@ -162,7 +162,7 @@ function pollStatus(jobId, originalUrl, tabId) {
         
         chrome.notifications.create({
             type: 'basic',
-            iconUrl: chrome.runtime.getURL('logo.png'),
+            iconUrl: chrome.runtime.getURL('logo.jpg'),
             title: 'Try-On Timed Out',
             message: 'The process took longer than 5 minutes. Please try again.'
         });
@@ -192,7 +192,7 @@ function pollStatus(jobId, originalUrl, tabId) {
         
         chrome.notifications.create({
             type: 'basic',
-            iconUrl: chrome.runtime.getURL('logo.png'),
+            iconUrl: chrome.runtime.getURL('logo.jpg'),
             title: 'Try-On Complete!',
             message: 'The image has been updated.'
         });
@@ -201,7 +201,7 @@ function pollStatus(jobId, originalUrl, tabId) {
         clearInterval(intervalId);
         chrome.notifications.create({
             type: 'basic',
-            iconUrl: chrome.runtime.getURL('logo.png'),
+            iconUrl: chrome.runtime.getURL('logo.jpg'),
             title: 'Try-On Failed',
             message: data.error || 'Something went wrong.'
         });
