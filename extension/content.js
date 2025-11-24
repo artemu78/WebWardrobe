@@ -31,6 +31,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         overlay.style.fontSize = '16px';
         overlay.style.fontWeight = 'bold';
         overlay.style.zIndex = '1000';
+        overlay.style.padding = '10px';
+        overlay.style.textAlign = 'center';
+        overlay.style.wordBreak = 'break-word';
+        overlay.style.overflowY = 'auto';
         overlay.innerText = 'Processing Try-On...';
         
         wrapper.appendChild(overlay);

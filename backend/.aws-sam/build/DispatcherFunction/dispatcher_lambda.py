@@ -398,8 +398,21 @@ def generator_handler(event, context):
             headers={'Content-Type': 'application/json', 'x-goog-api-key': api_key}
         )
         
-        with urllib.request.urlopen(req) as response:
-            response_data = json.loads(response.read().decode('utf-8'))
+        # Retry logic for 503 Service Unavailable
+        import time
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                with urllib.request.urlopen(req) as response:
+                    response_data = json.loads(response.read().decode('utf-8'))
+                    break # Success
+            except urllib.error.HTTPError as e:
+                if e.code == 503 and attempt < max_retries - 1:
+                    wait_time = (2 ** attempt) * 1 # 1, 2, 4, 8, 16 seconds
+                    print(f"Gemini 503 Unavailable. Retrying in {wait_time}s...")
+                    time.sleep(wait_time)
+                else:
+                    raise e
             
         # Extract Image
         candidates = response_data.get('candidates', [])

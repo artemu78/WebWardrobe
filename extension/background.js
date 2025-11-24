@@ -138,7 +138,8 @@ async function startTryOnJob(itemUrl, selfieId, token, tabId) {
           type: 'basic',
           iconUrl: chrome.runtime.getURL('logo.jpg'),
           title: 'Error',
-          message: error.message || 'Failed to start try-on.'
+          message: error.message || 'Failed to start try-on.',
+          requireInteraction: true
         });
     } catch (e) { console.error("Notification error:", e); }
 
@@ -203,7 +204,8 @@ function pollStatus(jobId, originalUrl, tabId) {
             type: 'basic',
             iconUrl: chrome.runtime.getURL('logo.jpg'),
             title: 'Try-On Failed',
-            message: data.error || 'Something went wrong.'
+            message: data.error || 'Something went wrong.',
+            requireInteraction: true
         });
         
         chrome.tabs.sendMessage(tabId, {

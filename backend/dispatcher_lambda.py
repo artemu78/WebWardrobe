@@ -93,16 +93,8 @@ def dispatcher_handler(event, context):
         }
 
         # Initialize Job Status in DynamoDB
-        table_name = os.environ.get('TABLE_NAME') or 'TryOnJobs' # Fallback or env var
-        # Note: TABLE_NAME might not be in env for Dispatcher, need to check template.yaml
-        # Adding TABLE_NAME to Dispatcher env in template.yaml is required.
-        # For now, let's assume TryOnJobsTable is named 'TryOnJobs' or use a separate env var if needed.
-        # Better: Add TABLE_NAME to Dispatcher env.
-        
-        # Actually, let's use the hardcoded name or better, add it to env in next step.
-        # For this step, I will add the logic assuming TABLE_NAME is available.
-        
-        job_table = dynamodb.Table('TryOnJobs') 
+        table_name = os.environ['TABLE_NAME']
+        job_table = dynamodb.Table(table_name)
         job_table.put_item(
             Item={
                 'jobId': job_id,
@@ -321,8 +313,14 @@ def status_handler(event, context):
         if not item:
             return {
                 'statusCode': 200,
-                'body': json.dumps({'status': 'PROCESSING'})
+                'body': json.dumps({
+                    'status': 'PROCESSING',
+                    'timestamp': datetime.datetime.utcnow().isoformat()
+                })
             }
+
+        # Update timestamp to reflect current server time as requested
+        item['timestamp'] = datetime.datetime.utcnow().isoformat()
 
         return {
             'statusCode': 200,
@@ -398,8 +396,21 @@ def generator_handler(event, context):
             headers={'Content-Type': 'application/json', 'x-goog-api-key': api_key}
         )
         
-        with urllib.request.urlopen(req) as response:
-            response_data = json.loads(response.read().decode('utf-8'))
+        # Retry logic for 503 Service Unavailable
+        import time
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                with urllib.request.urlopen(req) as response:
+                    response_data = json.loads(response.read().decode('utf-8'))
+                    break # Success
+            except urllib.error.HTTPError as e:
+                if e.code == 503 and attempt < max_retries - 1:
+                    wait_time = (2 ** attempt) * 1 # 1, 2, 4, 8, 16 seconds
+                    print(f"Gemini 503 Unavailable. Retrying in {wait_time}s...")
+                    time.sleep(wait_time)
+                else:
+                    raise e
             
         # Extract Image
         candidates = response_data.get('candidates', [])
