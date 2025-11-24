@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const authSection = document.getElementById('auth-section');
   const mainSection = document.getElementById('main-section');
 
+  const topupBtn = document.getElementById('topup-btn');
+  const creditCount = document.getElementById('credit-count');
+
   const logoutBtn = document.getElementById('logout-btn');
 
   // Check Auth
@@ -64,6 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
     authSection.classList.add('hidden');
     mainSection.classList.remove('hidden');
     loadImages(token);
+
+    // Setup TopUp
+    if (topupBtn) {
+        topupBtn.onclick = () => {
+             alert("Top-up functionality coming soon!");
+        };
+    }
 
     // Setup Upload
     uploadBtn.onclick = async () => {
@@ -172,6 +182,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const data = await res.json();
       
+      if (data.credits !== undefined) {
+          creditCount.textContent = data.credits;
+          if (data.credits <= 0) {
+              creditCount.style.color = 'red';
+          } else {
+              creditCount.style.color = 'black';
+          }
+      }
+
       listDiv.innerHTML = '';
       if (data.images && data.images.length > 0) {
         data.images.forEach(img => {

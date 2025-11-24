@@ -107,6 +107,24 @@ async function startTryOnJob(itemUrl, selfieId, token, tabId) {
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Server Error:", errorData);
+
+        if (response.status === 402 || errorData.code === 'INSUFFICIENT_CREDITS') {
+             // Handle Insufficient Credits
+             chrome.notifications.create({
+                type: 'basic',
+                iconUrl: chrome.runtime.getURL('logo.jpg'),
+                title: 'Insufficient Credits',
+                message: 'You need more credits to generate images.',
+                requireInteraction: true
+            });
+
+            chrome.tabs.sendMessage(tabId, {
+                action: "SHOW_TOPUP_PROMPT",
+                originalUrl: itemUrl
+            });
+            return; // Stop execution
+        }
+
         throw new Error(errorData.error || `Server Error: ${response.status}`);
     }
 

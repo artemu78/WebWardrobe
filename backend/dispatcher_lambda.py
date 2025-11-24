@@ -74,14 +74,60 @@ def dispatcher_handler(event, context):
         user_table = dynamodb.Table(user_table_name)
         
         user_profile = user_table.get_item(Key={'userId': user_id}).get('Item')
+
+        # Initialize profile if not found, but we need selfie so it should exist normally.
+        # However, we must ensure credits exist.
         if not user_profile:
+             # Create new profile with 5 credits?
+             # Technically they can't upload selfie without profile creation usually,
+             # but let's handle it gracefully or return error.
              return {'statusCode': 404, 'body': json.dumps({'error': 'User profile not found'})}
+
+        # Check credits
+        credits = user_profile.get('credits', 0)
+
+        # Correction: If credits key missing, give them 5 (legacy user or first time logic)
+        if 'credits' not in user_profile:
+            credits = 5
+            # We will update it below
+
+        if credits <= 0:
+            return {
+                'statusCode': 402,
+                'body': json.dumps({
+                    'error': 'Insufficient credits',
+                    'code': 'INSUFFICIENT_CREDITS'
+                })
+            }
              
         images = user_profile.get('images', [])
         selfie_url = next((img['s3Url'] for img in images if img['id'] == selfie_id), None)
         
         if not selfie_url:
             return {'statusCode': 404, 'body': json.dumps({'error': 'Selfie not found'})}
+
+        # Deduct credit
+        try:
+            user_table.update_item(
+                Key={'userId': user_id},
+                UpdateExpression="set credits = if_not_exists(credits, :start) - :dec",
+                ConditionExpression="credits > :zero OR attribute_not_exists(credits)",
+                ExpressionAttributeValues={
+                    ':dec': 1,
+                    ':start': 5, # If missing, start at 5 then minus 1
+                    ':zero': 0
+                }
+            )
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+                 return {
+                    'statusCode': 402,
+                    'body': json.dumps({
+                        'error': 'Insufficient credits',
+                        'code': 'INSUFFICIENT_CREDITS'
+                    })
+                }
+            raise e
 
         job_id = str(uuid.uuid4())
         state_machine_arn = os.environ['STATE_MACHINE_ARN']
@@ -257,9 +303,14 @@ def profile_handler(event, context):
             response = user_table.get_item(Key={'userId': user_id})
             item = response.get('Item', {})
             images = item.get('images', [])
+            # Return credits as well, default to 5 if not set
+            credits = int(item.get('credits', 5))
             return {
                 'statusCode': 200,
-                'body': json.dumps({'images': images})
+                'body': json.dumps({
+                    'images': images,
+                    'credits': credits
+                }, default=str) # handle Decimal if any
             }
 
         # DELETE /user/images/{fileId}
