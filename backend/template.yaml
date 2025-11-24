@@ -45,18 +45,6 @@ Resources:
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
 
-  UserSelfiesTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: UserSelfies
-      AttributeDefinitions:
-        - AttributeName: imageId
-          AttributeType: S
-      KeySchema:
-        - AttributeName: imageId
-          KeyType: HASH
-      BillingMode: PAY_PER_REQUEST
-
   UserGenerationsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -145,8 +133,6 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserProfilesTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserSelfiesTable
         - DynamoDBReadPolicy:
             TableName: !Ref UserGenerationsTable
         - S3CrudPolicy:
@@ -154,7 +140,6 @@ Resources:
       Environment:
         Variables:
           USER_TABLE_NAME: !Ref UserProfilesTable
-          USER_SELFIES_TABLE_NAME: !Ref UserSelfiesTable
           USER_GENERATIONS_TABLE_NAME: !Ref UserGenerationsTable
           BUCKET_NAME: !Ref TryOnBucket
       Events:
@@ -225,12 +210,9 @@ Resources:
       Policies:
         - S3CrudPolicy:
             BucketName: !Ref TryOnBucket
-        - DynamoDBReadPolicy:
-            TableName: !Ref UserSelfiesTable
       Environment:
         Variables:
           BUCKET_NAME: !Ref TryOnBucket
-          USER_SELFIES_TABLE_NAME: !Ref UserSelfiesTable
           GEMINI_API_KEY: !Ref NanoBananaApiKey
           GEMINI_API_URL: !Ref NanoBananaApiUrl
 

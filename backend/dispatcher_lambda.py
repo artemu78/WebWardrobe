@@ -246,31 +246,6 @@ def profile_handler(event, context):
                     ':empty_list': []
                 }
             )
-
-            # Store Base64 in UserSelfiesTable
-            try:
-                selfies_table_name = os.environ['USER_SELFIES_TABLE_NAME']
-                selfies_table = dynamodb.Table(selfies_table_name)
-
-                # Download from S3
-                # We need to construct the s3 object key properly or use the one we have
-                # s3_key is available
-                s3_response = s3_client.get_object(Bucket=bucket_name, Key=s3_key)
-                image_content = s3_response['Body'].read()
-                base64_data = base64.b64encode(image_content).decode('utf-8')
-
-                selfies_table.put_item(
-                    Item={
-                        'imageId': file_id,
-                        'base64Data': base64_data,
-                        'userId': user_id,
-                        'timestamp': datetime.datetime.utcnow().isoformat()
-                    }
-                )
-            except Exception as e:
-                print(f"Error saving to Selfies table: {e}")
-                # We don't fail the request if this fails, but we should log it.
-                # In a real system, we might want to retry or fail.
             
             return {
                 'statusCode': 200,
@@ -415,24 +390,7 @@ def generator_handler(event, context):
 
         print(f"Downloading images for job {job_id}")
         item_b64 = download_as_base64(item_url)
-
-        selfie_b64 = None
-        # Try to get selfie from DynamoDB if selfieId is provided
-        if selfie_id:
-            try:
-                selfies_table_name = os.environ['USER_SELFIES_TABLE_NAME']
-                selfies_table = dynamodb.Table(selfies_table_name)
-                response = selfies_table.get_item(Key={'imageId': selfie_id})
-                if 'Item' in response and 'base64Data' in response['Item']:
-                    print("Retrieved selfie from DynamoDB")
-                    selfie_b64 = response['Item']['base64Data']
-            except Exception as e:
-                print(f"Error fetching from Selfies table: {e}")
-
-        # Fallback to download
-        if not selfie_b64:
-             print("Downloading selfie from S3")
-             selfie_b64 = download_as_base64(selfie_url)
+        selfie_b64 = download_as_base64(selfie_url)
 
         # Construct Payload for Gemini
         payload = {

@@ -9,7 +9,6 @@
         "userId.$": "$.userId",
         "itemUrl.$": "$.itemUrl",
         "selfieUrl.$": "$.selfieUrl",
-        "selfieId.$": "$.selfieId",
         "apiPayload": {
           "clothes_image_url.$": "$.itemUrl",
           "user_image_url.$": "$.selfieUrl",
@@ -26,8 +25,7 @@
         "Payload": {
           "jobId.$": "$.jobId",
           "itemUrl.$": "$.itemUrl",
-          "selfieUrl.$": "$.selfieUrl",
-          "selfieId.$": "$.selfieId"
+          "selfieUrl.$": "$.selfieUrl"
         }
       },
       "Retry": [
