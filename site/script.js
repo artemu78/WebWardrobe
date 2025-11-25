@@ -46,6 +46,7 @@ const translations = {
         step2Desc: "Листай любимые магазины. Кликни правой кнопкой мыши на вещь, чтобы примерить.",
         step3Title: "3. Мгновенная примерка",
         step3Desc: "Увидишь себя в обновке мгновенно. Сочетай стили перед покупкой.",
+        transformationTitle: "Почувствуй разницу",
         tariffsTitle: "Тарифы",
         tariffOnTheGo: "На ходу",
         priceOnTheGo: "32 руб",
@@ -80,6 +81,7 @@ const translations = {
         step2Desc: "Stöbere in deinen Lieblingsshops. Rechtsklick auf einen Artikel zum Anprobieren.",
         step3Title: "3. Sofort anprobieren",
         step3Desc: "Sieh dich sofort im neuen Outfit. Kombiniere Styles vor dem Kauf.",
+        transformationTitle: "Sieh den Unterschied",
         tariffsTitle: "Preise",
         tariffOnTheGo: "Unterwegs",
         priceOnTheGo: "0.4$",
@@ -114,6 +116,7 @@ const translations = {
         step2Desc: "Navega por tus tiendas favoritas. Clic derecho en cualquier artículo para probártelo.",
         step3Title: "3. Pruébatelo al instante",
         step3Desc: "Vete con la prenda puesta al instante. Combina estilos antes de comprar.",
+        transformationTitle: "Mira la diferencia",
         tariffsTitle: "Precios",
         tariffOnTheGo: "Sobre la marcha",
         priceOnTheGo: "0.4$",
@@ -136,6 +139,9 @@ const translations = {
         legalText: ""
     }
 };
+
+// Add English translation for transformationTitle
+translations.en.transformationTitle = "See the Difference";
 
 document.addEventListener('DOMContentLoaded', () => {
     const langSelect = document.getElementById('language-select');
@@ -178,6 +184,34 @@ document.addEventListener('DOMContentLoaded', () => {
             if (t[key] !== undefined) {
                 el.innerHTML = t[key];
             }
+        });
+    }
+
+    // Scroll Animation Logic
+    const section = document.querySelector('.transformation-section');
+    const afterImage = document.querySelector('.img-after');
+
+    if (section && afterImage) {
+        window.addEventListener('scroll', () => {
+            const rect = section.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            
+            // Calculate progress
+            // We want the animation to happen as the section scrolls through the viewport.
+            // When the top of the section hits the top of the viewport (rect.top <= 0), we start.
+            // The section is 300vh tall. The sticky content is 100vh.
+            // So we have 200vh of scrollable distance where the content is pinned.
+            
+            const scrollableDistance = section.offsetHeight - viewportHeight;
+            const scrolled = -rect.top;
+            
+            let progress = scrolled / scrollableDistance;
+            
+            // Clamp progress between 0 and 1
+            progress = Math.max(0, Math.min(1, progress));
+            
+            const percentage = 100 - (progress * 100);
+            afterImage.style.clipPath = `inset(0 ${percentage}% 0 0)`;
         });
     }
 });
