@@ -1,64 +1,20 @@
 # WebWardrobe
 Typescript powered Chrome Extension. Gemini API wrapper for user to try on clothes virtually.
 
-```mermaid
-flowchart TD
+## Extension Explanation
 
-    subgraph API[API Gateway (HTTP API)]
-        API_TryOn[/POST /try-on/]
-        API_Upload[/POST /user/images/upload-url/]
-        API_Confirm[/POST /user/images/]
-        API_List[/GET /user/images/]
-        API_Delete[/DELETE /user/images/{fileId}/]
-        API_Status[/GET /status/{jobId}/]
-    end
+WebWardrobe is a Chrome Extension that revolutionizes online shopping by allowing users to virtually try on clothes from any website.
 
-    subgraph L1[Lambdas]
-        Dispatcher[DispatcherFunction]
-        Profile[ProfileFunction]
-        Status[StatusFunction]
-        Generator[GeneratorFunction]
-        Saver[ResultSaverFunction]
-    end
+**How it works:**
+1.  **Upload a Selfie:** Users upload a photo of themselves to the extension.
+2.  **Browse Anywhere:** While shopping on any clothing website, users can right-click on a product image.
+3.  **Virtual Try-On:** The extension uses the Gemini API to generate a photorealistic image of the user wearing the selected item, maintaining their pose and lighting.
+4.  **Instant Results:** The result is displayed directly on the webpage, overlaying the original product image.
 
-    subgraph DB[DynamoDB]
-        Jobs[(TryOnJobsTable)]
-        Profiles[(UserProfilesTable)]
-    end
+## Privacy Policy
 
-    S3Bucket[(S3 TryOnBucket)]
+**Your privacy is important to us.**
 
-    subgraph SF[Step Function: TryOnOrchestrator]
-        GStep[Generate Image Task → GeneratorFunction]
-        SStep[Save Result Task → ResultSaverFunction]
-        HTTPTask[HTTP Task → Nano-Banana API]
-    end
-
-    API_TryOn --> Dispatcher
-    API_Upload --> Profile
-    API_Confirm --> Profile
-    API_List --> Profile
-    API_Delete --> Profile
-    API_Status --> Status
-
-    Dispatcher --> Jobs
-    Dispatcher --> Profiles
-    Profile --> Profiles
-    Profile --> S3Bucket
-    Status --> Jobs
-
-    Dispatcher --> SF
-
-    SF --> GStep
-    GStep --> Generator
-    Generator --> S3Bucket
-
-    SF --> HTTPTask
-    HTTPTask -->|uses| ApiConnection[(EventBridge Connection)]
-
-    SF --> SStep
-    SStep --> Saver
-    Saver --> Jobs
-    Saver --> S3Bucket
-```
-    
+*   **No Personally Identifiable Information (PII) Stored:** We do not store any personally identifiable information such as your name, address, or phone number.
+*   **Authentication Data:** We only store your Google ID (obtained via secure Google Authentication) for the sole purpose of tracking your usage balance and managing your uploaded selfies.
+*   **Image Data:** The photos you upload are used strictly for the virtual try-on process and are not shared with any third parties other than the AI processing service required to generate the result.

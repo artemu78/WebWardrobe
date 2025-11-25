@@ -5,7 +5,6 @@
   "description": "Try on clothes from any website using your own photos.",
   "permissions": [
     "contextMenus",
-    "activeTab",
     "scripting",
     "identity",
     "notifications"
