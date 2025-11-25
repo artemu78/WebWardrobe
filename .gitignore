@@ -1,5 +1,6 @@
 # AWS SAM
 .aws-sam/
+backend/.aws-sam/
 samconfig.toml
 
 # Python
@@ -19,3 +20,4 @@ venv/
 # IDE
 .vscode/
 .idea/
+extension/node_modules

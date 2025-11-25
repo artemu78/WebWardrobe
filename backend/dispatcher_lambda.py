@@ -311,6 +311,46 @@ def profile_handler(event, context):
                 'body': json.dumps({'message': 'Image deleted'})
             }
 
+        # PATCH /user/images/{fileId} (Rename)
+        elif method == 'PATCH':
+            # Extract fileId from path
+            parts = path.split('/')
+            if len(parts) < 4:
+                 return {'statusCode': 400, 'body': json.dumps({'error': 'Invalid path'})}
+            
+            file_id = parts[-1]
+            
+            body = json.loads(event.get('body', '{}'))
+            new_name = body.get('name')
+            
+            if not new_name:
+                return {'statusCode': 400, 'body': json.dumps({'error': 'Missing new name'})}
+
+            # Get current images
+            response = user_table.get_item(Key={'userId': user_id})
+            item = response.get('Item', {})
+            images = item.get('images', [])
+            
+            # Find image to update
+            image_index = next((index for (index, img) in enumerate(images) if img['id'] == file_id), -1)
+            
+            if image_index == -1:
+                return {'statusCode': 404, 'body': json.dumps({'error': 'Image not found'})}
+            
+            # Update the name in the list
+            # We can use list index to update specific item in DynamoDB list
+            user_table.update_item(
+                Key={'userId': user_id},
+                UpdateExpression=f"SET #i[{image_index}].#n = :name",
+                ExpressionAttributeNames={'#i': 'images', '#n': 'name'},
+                ExpressionAttributeValues={':name': new_name}
+            )
+            
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'message': 'Image renamed'})
+            }
+
         else:
             return {'statusCode': 404, 'body': json.dumps({'error': 'Not found'})}
 

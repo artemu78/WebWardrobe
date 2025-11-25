@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>WebWardrobe</title>
+  <style>
+    body { width: 320px; padding: 10px; font-family: sans-serif; }
+    .hidden { display: none; }
+    .image-item { display: flex; align-items: center; margin-bottom: 10px; border: 1px solid #eee; padding: 5px; border-radius: 5px; justify-content: space-between; }
+    .image-info { display: flex; align-items: center; cursor: pointer; }
+    .image-item img { width: 48px; height: 48px; object-fit: cover; margin-right: 10px; border-radius: 4px; }
+    .image-actions { display: flex; gap: 5px; }
+    .action-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px 5px; }
+    .action-btn:hover { background-color: #f0f0f0; border-radius: 3px; }
+    .btn { background-color: #4285f4; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; width: 100%; }
+    .btn:disabled { background-color: #ccc; }
+    input[type="text"], input[type="file"] { width: 100%; margin-bottom: 10px; box-sizing: border-box; padding: 5px; }
+    h3 { margin-top: 0; }
+
+    /* Modal Styles */
+    .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9); }
+    .modal-content { margin: auto; display: block; width: 80%; max-width: 700px; max-height: 80%; object-fit: contain; margin-top: 50px; }
+    .close { position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; transition: 0.3s; cursor: pointer; }
+    .close:hover, .close:focus { color: #bbb; text-decoration: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="auth-section">
+    <div style="text-align: center; margin-bottom: 15px;">
+      <img src="logo.jpg" alt="WebWardrobe Logo" style="width: 64px; height: 64px;">
+    </div>
+    <h3>Welcome to WebWardrobe</h3>
+    <button id="login-btn" class="btn">Sign in with Google</button>
+  </div>
+
+  <div id="main-section" class="hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h3>Your Wardrobe</h3>
+      <button id="logout-btn" style="background: none; border: none; color: #4285f4; cursor: pointer; font-size: 12px;">Sign Out</button>
+    </div>
+    <div id="image-list"></div>
+    
+    <hr>
+    <h4>Add New Selfie</h4>
+    <input type="text" id="image-name" placeholder="Name (e.g., Blue Shirt)">
+    <input type="file" id="image-file" accept="image/*">
+    <button id="upload-btn" class="btn">Upload</button>
+    <p id="status-msg"></p>
+  </div>
+
+  <!-- Image Modal -->
+  <div id="image-modal" class="modal">
+    <span class="close">&times;</span>
+    <img class="modal-content" id="modal-img">
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
