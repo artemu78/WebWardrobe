@@ -21,3 +21,4 @@ venv/
 .vscode/
 .idea/
 extension/node_modules
+extension/archives
