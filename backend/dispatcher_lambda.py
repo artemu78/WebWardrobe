@@ -436,7 +436,7 @@ def generator_handler(event, context):
         payload = {
             "contents": [{
                 "parts": [
-                    {"text": "Generate a photorealistic image of the person from the first image wearing the clothes from the second image. Maintain the pose and lighting of the person."},
+                    {"text": "Blend Image A and Image B. In the result, the person from Image A should be seamlessly wearing the clothes from Image B. Maintain the facial features, pose, and lighting from Image A, but precisely transfer the clothing, textures, and colors from Image B onto the person. Use a photorealistic style, with natural shadows and details. Keep the background from Image A. For reference inputs: Image A is the source character, Image B provides the clothing."},
                     {"inline_data": {"mime_type": "image/jpeg", "data": selfie_b64}},
                     {"inline_data": {"mime_type": "image/jpeg", "data": item_b64}}
                 ]
