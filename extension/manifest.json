@@ -1,16 +1,14 @@
 {
   "manifest_version": 3,
   "name": "WebWardrobe Virtual Try-On",
-  "version": "2.9.8",
+  "version": "2.10.3",
   "description": "Try on clothes from any website using your own photos.",
   "permissions": [
     "contextMenus",
+    "activeTab",
     "scripting",
     "identity",
     "notifications"
-  ],
-  "host_permissions": [
-    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"
@@ -35,15 +33,5 @@
       "email",
       "profile"
     ]
-  },
-  "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content.js"
-      ]
-    }
-  ]
+  }
 }

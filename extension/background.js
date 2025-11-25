@@ -74,7 +74,18 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     
     chrome.identity.getAuthToken({ interactive: false }, function(token) {
         if (token) {
-            startTryOnJob(itemUrl, selfieId, token, tab.id);
+            // Inject content script dynamically
+            chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ['content.js']
+            }, () => {
+                if (chrome.runtime.lastError) {
+                    console.error("Script injection failed: " + chrome.runtime.lastError.message);
+                    // Optional: Notify user of failure
+                } else {
+                    startTryOnJob(itemUrl, selfieId, token, tab.id);
+                }
+            });
         }
     });
   } else if (info.menuItemId === "login-required" || info.menuItemId === "no-images") {

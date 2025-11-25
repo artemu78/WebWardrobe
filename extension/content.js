@@ -1,5 +1,10 @@
 // content.js
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+if (window.webWardrobeContentScriptInjected) {
+  // Already injected
+} else {
+  window.webWardrobeContentScriptInjected = true;
+
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const { action, originalUrl, resultUrl, error } = request;
 
   // Find all images with the matching src
@@ -70,4 +75,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
     }
   }
-});
+  });
+}
