@@ -63,6 +63,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /**
+   * Display the main UI, hide the authentication UI, load the user's images, and attach top-up and upload handlers.
+   * @param {string} token - OAuth bearer token used for authenticated API requests.
+   */
   function showMain(token) {
     authSection.classList.add('hidden');
     mainSection.classList.remove('hidden');
@@ -166,6 +170,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  /**
+   * Load and render the current user's images into the image list and update the displayed credit count.
+   *
+   * Displays a loading placeholder, fetches the user's images and credit information from the API using the provided bearer token, and populates the DOM image list with thumbnail/display images, download links, and delete controls. Updates the credit-count text and sets its color to red when credits are less than or equal to zero. Shows a session-expired message for unauthorized responses and a failure message on fetch errors.
+   *
+   * @param {string} token - Bearer token used to authenticate requests to the images API.
+   */
   async function loadImages(token) {
     const listDiv = document.getElementById('image-list');
     listDiv.innerHTML = 'Loading...';

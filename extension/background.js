@@ -89,6 +89,16 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
 });
 
+/**
+ * Initiates a server try-on job for an item image using a specified selfie.
+ *
+ * Sends an authenticated request to create a try-on job for `itemUrl` with `selfieId`. On success it notifies the user, signals the content script to show a processing overlay, and begins polling job status. If the server reports insufficient credits it notifies the user and instructs the tab to show a top-up prompt. On other errors it notifies the user and instructs the tab to show an error state.
+ *
+ * @param {string} itemUrl - The URL of the item image to try on.
+ * @param {string} selfieId - The identifier of the user's selfie to use for the try-on.
+ * @param {string} token - Authorization token to include in the request Authorization header.
+ * @param {number} tabId - The Chrome tab id where content-script messages and prompts should be sent.
+ */
 async function startTryOnJob(itemUrl, selfieId, token, tabId) {
   try {
     console.log("Starting try-on job...", { itemUrl, selfieId });
