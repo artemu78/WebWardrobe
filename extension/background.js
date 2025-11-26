@@ -83,7 +83,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
                     console.error("Script injection failed: " + chrome.runtime.lastError.message);
                     // Optional: Notify user of failure
                 } else {
-                    startTryOnJob(itemUrl, selfieId, token, tab.id);
+                    startTryOnJob(itemUrl, selfieId, token, tab.id, tab.url);
                 }
             });
         }
@@ -110,9 +110,9 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
  * @param {string} token - Authorization token to include in the request Authorization header.
  * @param {number} tabId - The Chrome tab id where content-script messages and prompts should be sent.
  */
-async function startTryOnJob(itemUrl, selfieId, token, tabId) {
+async function startTryOnJob(itemUrl, selfieId, token, tabId, siteUrl) {
   try {
-    console.log("Starting try-on job...", { itemUrl, selfieId });
+    console.log("Starting try-on job...", { itemUrl, selfieId, siteUrl });
     
     const response = await fetch(`${API_BASE_URL}/try-on`, {
       method: 'POST',
@@ -120,7 +120,7 @@ async function startTryOnJob(itemUrl, selfieId, token, tabId) {
         'Content-Type': 'application/json',
         'Authorization': token
       },
-      body: JSON.stringify({ itemUrl, selfieId })
+      body: JSON.stringify({ itemUrl, selfieId, siteUrl })
     });
 
     console.log("Response", response);

@@ -79,6 +79,7 @@ def dispatcher_handler(event, context):
         body = json.loads(event.get('body', '{}'))
         item_url = body.get('itemUrl')
         selfie_id = body.get('selfieId')
+        site_url = body.get('siteUrl')
         user_id = get_user_id_from_token(event)
 
         if not item_url or not selfie_id or not user_id:
@@ -156,7 +157,8 @@ def dispatcher_handler(event, context):
             'userId': user_id,
             'itemUrl': item_url,
             'selfieUrl': selfie_url,
-            'selfieId': selfie_id
+            'selfieId': selfie_id,
+            'siteUrl': site_url
         }
 
         # Initialize Job Status in DynamoDB
@@ -238,9 +240,20 @@ def profile_handler(event, context):
                     ScanIndexForward=False  # Newest first
                 )
                 items = response.get('Items', [])
+
+                # Ensure all required fields are present
+                generations = []
+                for item in items:
+                    generations.append({
+                        'resultUrl': item.get('resultUrl'),
+                        'itemUrl': item.get('itemUrl'),
+                        'siteUrl': item.get('siteUrl'),
+                        'timestamp': item.get('timestamp')
+                    })
+
                 return {
                     'statusCode': 200,
-                    'body': json.dumps({'generations': items})
+                    'body': json.dumps({'generations': generations})
                 }
             except Exception as e:
                 print(f"Error fetching generations: {e}")
@@ -490,9 +503,11 @@ def generator_handler(event, context):
     """
     try:
         job_id = event['jobId']
+        user_id = event['userId']
         item_url = event['itemUrl']
         selfie_url = event['selfieUrl']
         selfie_id = event.get('selfieId')
+        site_url = event.get('siteUrl')
         
         api_key = os.environ['GEMINI_API_KEY']
         api_url = os.environ['GEMINI_API_URL']
@@ -574,7 +589,7 @@ def generator_handler(event, context):
         # Decode and Save to S3
         print("Saving result to S3...")
         image_data = base64.b64decode(image_b64)
-        s3_key = f"results/{job_id}.png"
+        s3_key = f"results/{user_id}/{job_id}.png"
         
         s3_client.put_object(
             Bucket=bucket_name,
@@ -587,7 +602,10 @@ def generator_handler(event, context):
         
         return {
             'jobId': job_id,
-            'status': 'COMPLETED', 
+            'userId': user_id,
+            'itemUrl': item_url,
+            'siteUrl': site_url,
+            'status': 'COMPLETED',
             'resultUrl': result_url
         }
 
@@ -641,6 +659,8 @@ def saver_handler(event, context):
             # Save to User Generations History
             if user_id:
                 try:
+                    item_url = event.get('itemUrl')
+                    site_url = event.get('siteUrl')
                     gen_table_name = os.environ['USER_GENERATIONS_TABLE_NAME']
                     gen_table = dynamodb.Table(gen_table_name)
                     gen_table.put_item(
@@ -648,7 +668,9 @@ def saver_handler(event, context):
                             'userId': user_id,
                             'timestamp': timestamp,
                             'jobId': job_id,
-                            'resultUrl': result_url
+                            'resultUrl': result_url,
+                            'itemUrl': item_url,
+                            'siteUrl': site_url
                         }
                     )
                 except Exception as e:
