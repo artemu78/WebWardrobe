@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup Upload
     uploadBtn.onclick = async () => {
       const nameInput = document.getElementById('image-name');
-      const fileInput = document.getElementById('image-file');
+      const fileInput = document.getElementById('file-upload');
       const statusMsg = document.getElementById('status-msg');
       
       const name = nameInput.value;
@@ -156,6 +156,49 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  // Drag and drop
+  const dropZone = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('file-upload');
+  const dropZoneText = document.getElementById('drop-zone-text');
+
+  dropZone.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('bg-slate-100', 'dark:bg-slate-700');
+  });
+
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+  });
+
+  dropZone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('bg-slate-100', 'dark:bg-slate-700');
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('bg-slate-100', 'dark:bg-slate-700');
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      fileInput.files = files;
+      updateDropZoneText(files[0].name);
+    }
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+      updateDropZoneText(fileInput.files[0].name);
+    }
+  });
+
+  function updateDropZoneText(fileName) {
+      dropZoneText.innerHTML = `
+          <span class="material-icons-outlined text-4xl text-green-500 mb-2">check_circle</span>
+          <p class="mb-1 text-sm text-slate-500 dark:text-slate-400"><span class="font-semibold">${fileName}</span></p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Ready to upload</p>
+      `;
+  }
+
   async function loadImages(token) {
     const listDiv = document.getElementById('image-list');
     listDiv.innerHTML = 'Loading...';
@@ -176,41 +219,31 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.images && data.images.length > 0) {
         data.images.forEach(img => {
           const div = document.createElement('div');
-          div.className = 'image-item';
+          div.className = 'flex items-center p-3 border border-slate-200 dark:border-slate-700 rounded-lg';
           
-          // Use thumbnail if available, else original
           const displayUrl = img.thumbnailUrl || img.s3Url;
           
           div.innerHTML = `
-            <div class="image-info" title="Click to view original">
-                <img src="${displayUrl}" alt="${img.name}">
-                <span>${img.name}</span>
-            </div>
-            <div class="image-actions">
-                <a href="${img.s3Url}" download="${img.name}" target="_blank" class="action-btn" title="Download">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
+            <img alt="${img.name}" class="w-12 h-12 object-cover rounded-md mr-4" src="${displayUrl}"/>
+            <span class="flex-grow font-medium text-slate-800 dark:text-slate-200">${img.name}</span>
+            <div class="flex items-center space-x-3 text-slate-500 dark:text-slate-400">
+                <a href="${img.s3Url}" download="${img.name}" target="_blank" class="hover:text-primary" title="Download">
+                    <span class="material-icons-outlined" style="font-size: 20px;">download</span>
                 </a>
-                <button class="action-btn rename-btn" data-id="${img.id}" title="Rename">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
+                <button class="hover:text-primary rename-btn" data-id="${img.id}" title="Rename">
+                    <span class="material-icons-outlined" style="font-size: 20px;">edit</span>
                 </button>
-                <button class="action-btn delete-btn" data-id="${img.id}" title="Delete">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
+                <button class="hover:text-red-500 delete-btn" data-id="${img.id}" title="Delete">
+                    <span class="material-icons-outlined" style="font-size: 20px;">delete</span>
                 </button>
             </div>
           `;
           
-          // Click to view original
-          div.querySelector('.image-info').onclick = () => {
+          div.querySelector('img').onclick = () => {
+              modal.style.display = "block";
+              modalImg.src = img.s3Url;
+          };
+          div.querySelector('span').onclick = () => {
               modal.style.display = "block";
               modalImg.src = img.s3Url;
           };
