@@ -53,9 +53,27 @@ def get_user_id_from_token(event):
 
 def dispatcher_handler(event, context):
     """
-    Triggered by POST /try-on
-    Body: { itemUrl, selfieId }
-    Headers: { x-user-id: ... }
+    Handle POST /try-on requests: validate inputs, charge a credit, create a job record, and start a Step Functions execution to perform the try-on.
+    
+    Expects:
+    - event['body'] JSON containing `itemUrl` (string) and `selfieId` (string).
+    - Authorization via headers (Bearer token validated by get_user_id_from_token or x-user-id header).
+    - Environment variables: USER_TABLE_NAME, TABLE_NAME, STATE_MACHINE_ARN.
+    
+    Behavior:
+    - Verifies itemUrl, selfieId, and authenticated userId; returns 400 if any are missing.
+    - Loads the user's profile from the USERS table and locates the selfie by id; returns 404 if profile or selfie is not found.
+    - Treats missing `credits` as 5 for legacy users; returns 402 with code `INSUFFICIENT_CREDITS` if the user has zero or fewer credits.
+    - Atomically decrements the user's credits by 1 using a conditional DynamoDB update; if the condition fails, returns 402 with code `INSUFFICIENT_CREDITS`.
+    - Creates a job record in the jobs table with status `PROCESSING`, starts the Step Functions state machine with a payload containing jobId, userId, itemUrl, selfieUrl, and selfieId, and returns the jobId and executionArn on success.
+    
+    Returns:
+    A dict suitable for an API Gateway response:
+    - 200: {'jobId': <id>, 'executionArn': <arn>, 'message': 'Try-on job started'}
+    - 400: missing parameters
+    - 402: insufficient credits (includes 'code': 'INSUFFICIENT_CREDITS')
+    - 404: user profile or selfie not found
+    - 500: unexpected error with error message
     """
     try:
         body = json.loads(event.get('body', '{}'))
@@ -74,14 +92,60 @@ def dispatcher_handler(event, context):
         user_table = dynamodb.Table(user_table_name)
         
         user_profile = user_table.get_item(Key={'userId': user_id}).get('Item')
+
+        # Initialize profile if not found, but we need selfie so it should exist normally.
+        # However, we must ensure credits exist.
         if not user_profile:
+             # Create new profile with 5 credits?
+             # Technically they can't upload selfie without profile creation usually,
+             # but let's handle it gracefully or return error.
              return {'statusCode': 404, 'body': json.dumps({'error': 'User profile not found'})}
+
+        # Check credits
+        credits = user_profile.get('credits', 0)
+
+        # Correction: If credits key missing, give them 5 (legacy user or first time logic)
+        if 'credits' not in user_profile:
+            credits = 5
+            # We will update it below
+
+        if credits <= 0:
+            return {
+                'statusCode': 402,
+                'body': json.dumps({
+                    'error': 'Insufficient credits',
+                    'code': 'INSUFFICIENT_CREDITS'
+                })
+            }
              
         images = user_profile.get('images', [])
         selfie_url = next((img['s3Url'] for img in images if img['id'] == selfie_id), None)
         
         if not selfie_url:
             return {'statusCode': 404, 'body': json.dumps({'error': 'Selfie not found'})}
+
+        # Deduct credit
+        try:
+            user_table.update_item(
+                Key={'userId': user_id},
+                UpdateExpression="set credits = if_not_exists(credits, :start) - :dec",
+                ConditionExpression="credits > :zero OR attribute_not_exists(credits)",
+                ExpressionAttributeValues={
+                    ':dec': 1,
+                    ':start': 5, # If missing, start at 5 then minus 1
+                    ':zero': 0
+                }
+            )
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+                 return {
+                    'statusCode': 402,
+                    'body': json.dumps({
+                        'error': 'Insufficient credits',
+                        'code': 'INSUFFICIENT_CREDITS'
+                    })
+                }
+            raise e
 
         job_id = str(uuid.uuid4())
         state_machine_arn = os.environ['STATE_MACHINE_ARN']
@@ -131,7 +195,23 @@ def dispatcher_handler(event, context):
 
 def profile_handler(event, context):
     """
-    Handles /user/images routes
+    Handle authenticated user image and generation endpoints under /user/*.
+    
+    Supported routes and behavior:
+    - GET /user/generations: return the authenticated user's generations, newest first.
+    - POST /user/images/upload-url: generate presigned S3 upload URL(s) for an image (and optional thumbnail); returns upload URL(s), s3 key(s), and fileId.
+    - POST /user/images: confirm an uploaded image, enforce a maximum of 5 images, append image metadata to the user's profile, and return the saved image id and URL.
+    - GET /user/images: return the user's images and current credits (defaults to 5 when unset).
+    - DELETE /user/images/{fileId}: delete an image and optional thumbnail from S3 and remove it from the user's profile.
+    
+    Parameters:
+    - event (dict): API Gateway HTTP event containing path/rawPath, requestContext.http.method, headers, and body (JSON for POST requests). The handler expects an authenticated user identifier resolvable via get_user_id_from_token(event).
+    - context: Lambda context object (unused by this handler).
+    
+    Returns:
+    A dict representing an HTTP response with keys:
+    - statusCode (int): HTTP status code (e.g., 200, 400, 401, 404, 500, 402 for insufficient credits).
+    - body (str): JSON-encoded response body containing data or an error message.
     """
     try:
         path = event.get('rawPath') or event.get('path') # HTTP API uses rawPath
@@ -257,9 +337,14 @@ def profile_handler(event, context):
             response = user_table.get_item(Key={'userId': user_id})
             item = response.get('Item', {})
             images = item.get('images', [])
+            # Return credits as well, default to 5 if not set
+            credits = int(item.get('credits', 5))
             return {
                 'statusCode': 200,
-                'body': json.dumps({'images': images})
+                'body': json.dumps({
+                    'images': images,
+                    'credits': credits
+                }, default=str) # handle Decimal if any
             }
 
         # DELETE /user/images/{fileId}

@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const authSection = document.getElementById('auth-section');
   const mainSection = document.getElementById('main-section');
 
+  const topupBtn = document.getElementById('topup-btn');
+  const creditCount = document.getElementById('credit-count');
+
   const logoutBtn = document.getElementById('logout-btn');
 
   // Check Auth
@@ -60,10 +63,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /**
+   * Display the main UI, hide the authentication UI, load the user's images, and attach top-up and upload handlers.
+   * @param {string} token - OAuth bearer token used for authenticated API requests.
+   */
   function showMain(token) {
     authSection.classList.add('hidden');
     mainSection.classList.remove('hidden');
     loadImages(token);
+
+    // Setup TopUp
+    if (topupBtn) {
+        topupBtn.onclick = () => {
+             alert("Top-up functionality coming soon!");
+        };
+    }
 
     // Setup Upload
     uploadBtn.onclick = async () => {
@@ -156,6 +170,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  /**
+   * Load and render the current user's images into the image list and update the displayed credit count.
+   *
+   * Displays a loading placeholder, fetches the user's images and credit information from the API using the provided bearer token, and populates the DOM image list with thumbnail/display images, download links, and delete controls. Updates the credit-count text and sets its color to red when credits are less than or equal to zero. Shows a session-expired message for unauthorized responses and a failure message on fetch errors.
+   *
+   * @param {string} token - Bearer token used to authenticate requests to the images API.
+   */
   async function loadImages(token) {
     const listDiv = document.getElementById('image-list');
     listDiv.innerHTML = 'Loading...';
@@ -172,6 +193,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const data = await res.json();
       
+      if (data.credits !== undefined) {
+          creditCount.textContent = data.credits;
+          if (data.credits <= 0) {
+              creditCount.style.color = 'red';
+          } else {
+              creditCount.style.color = 'black';
+          }
+      }
+
       listDiv.innerHTML = '';
       if (data.images && data.images.length > 0) {
         data.images.forEach(img => {
