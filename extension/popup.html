@@ -1,65 +1,130 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>WebWardrobe</title>
-  <style>
-    body { width: 320px; padding: 10px; font-family: sans-serif; }
-    .hidden { display: none; }
-    .image-item { display: flex; align-items: center; margin-bottom: 10px; border: 1px solid #eee; padding: 5px; border-radius: 5px; justify-content: space-between; }
-    .image-info { display: flex; align-items: center; cursor: pointer; }
-    .image-item img { width: 48px; height: 48px; object-fit: cover; margin-right: 10px; border-radius: 4px; }
-    .image-actions { display: flex; gap: 5px; }
-    .action-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px 5px; }
-    .action-btn:hover { background-color: #f0f0f0; border-radius: 3px; }
-    .btn { background-color: #4285f4; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; width: 100%; }
-    .btn:disabled { background-color: #ccc; }
-    input[type="text"], input[type="file"] { width: 100%; margin-bottom: 10px; box-sizing: border-box; padding: 5px; }
-    h3 { margin-top: 0; }
-
-    /* Modal Styles */
-    .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9); }
-    .modal-content { margin: auto; display: block; width: 80%; max-width: 700px; max-height: 80%; object-fit: contain; margin-top: 50px; }
-    .close { position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; transition: 0.3s; cursor: pointer; }
-    .close:hover, .close:focus { color: #bbb; text-decoration: none; cursor: pointer; }
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Your Wardrobe</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#4F46E5",
+            "background-light": "#F9FAFB",
+            "background-dark": "#111827",
+          },
+          fontFamily: {
+            display: ["Roboto", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem",
+          },
+        },
+      },
+    };
+  </script>
+<style>
+    body {
+      font-family: 'Roboto', sans-serif;
+    }
+    /* The design reference uses a fixed height, but for a browser extension popup,
+       it's better to let the content define the height. Let's set a min-width
+       to match the design's look. */
+    body {
+      width: 24rem; /* max-w-sm is 24rem */
+      padding: 1.5rem; /* p-6 is 1.5rem */
+    }
   </style>
-</head>
-<body>
-  <div id="auth-section">
-    <div style="text-align: center; margin-bottom: 15px;">
-      <img src="logo.jpg" alt="WebWardrobe Logo" style="width: 64px; height: 64px;">
-    </div>
-    <h3>Welcome to WebWardrobe</h3>
-    <button id="login-btn" class="btn">Sign in with Google</button>
-  </div>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 font-display">
 
-  <div id="main-section" class="hidden">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <h3>Your Wardrobe</h3>
-      <button id="logout-btn" style="background: none; border: none; color: #4285f4; cursor: pointer; font-size: 12px;">Sign Out</button>
-    </div>
+<div id="auth-section">
+    <!-- Simplified login view, can be styled later if needed -->
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white text-center mb-4">WebWardrobe</h1>
+    <button id="login-btn" class="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-background-dark transition-all">
+        Sign in with Google
+    </button>
+</div>
 
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 5px; background: #f9f9f9; border-radius: 4px;">
-        <span style="font-weight: bold;">Credits: <span id="credit-count">...</span></span>
-        <button id="topup-btn" style="background: #34a853; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">Top Up</button>
-    </div>
+<div id="main-section" class="hidden">
+    <header class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Your Wardrobe</h1>
+        <button id="logout-btn" class="bg-primary/10 dark:bg-primary/20 text-primary font-semibold py-2 px-4 rounded-lg text-sm hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors flex items-center space-x-2">
+            <span class="material-icons-outlined text-base">logout</span>
+            <span>Sign Out</span>
+        </button>
+    </header>
+    <main class="space-y-8">
+        <section class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+            <div class="flex justify-between items-center">
+                <p class="font-medium text-gray-700 dark:text-gray-300">Credits: <span id="credit-count" class="font-bold text-gray-900 dark:text-white">...</span></p>
+                <button id="topup-btn" class="bg-primary/10 dark:bg-primary/20 text-primary font-semibold py-2 px-4 rounded-lg text-sm hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors">Top Up</button>
+            </div>
+        </section>
 
-    <div id="image-list"></div>
-    
-    <hr>
-    <h4>Add New Selfie</h4>
-    <input type="text" id="image-name" placeholder="Name (e.g., Blue Shirt)">
-    <input type="file" id="image-file" accept="image/*">
-    <button id="upload-btn" class="btn">Upload</button>
-    <p id="status-msg"></p>
-  </div>
+        <section id="selfies-section" class="space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Selfies</h2>
+                <button data-toggle-button="selfies-list" class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+                    <span class="material-icons-outlined">expand_less</span>
+                </button>
+            </div>
+            <div id="selfies-list" class="space-y-4">
+                <!-- Selfie items will be injected here -->
+            </div>
+        </section>
 
-  <!-- Image Modal -->
-  <div id="image-modal" class="modal">
-    <span class="close">&times;</span>
-    <img class="modal-content" id="modal-img">
-  </div>
+        <section id="generated-section" class="space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Generated Images</h2>
+                <button data-toggle-button="generated-images-list" class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+                    <span class="material-icons-outlined">expand_less</span>
+                </button>
+            </div>
+            <div id="generated-images-list" class="space-y-4">
+                <!-- Generated image items will be injected here -->
+            </div>
+        </section>
 
-  <script src="popup.js"></script>
+        <section id="add-new-image-section" class="space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Add New Image</h2>
+                <button data-toggle-button="add-new-image-form" class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+                    <span class="material-icons-outlined">expand_less</span>
+                </button>
+            </div>
+            <div id="add-new-image-form" class="space-y-4">
+                <div>
+                    <label class="sr-only" for="image-name">Image Name</label>
+                    <input class="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary focus:border-primary dark:text-white placeholder-gray-400 dark:placeholder-gray-500" id="image-name" placeholder="Name (e.g., My selfie)" type="text"/>
+                </div>
+                <div class="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary dark:hover:border-primary transition-colors cursor-pointer">
+                    <div class="flex flex-col items-center justify-center space-y-2 text-gray-500 dark:text-gray-400">
+                        <span class="material-icons-outlined text-4xl">cloud_upload</span>
+                        <p class="font-medium">Drag & drop files here</p>
+                        <p class="text-sm">or</p>
+                        <label for="image-file" class="font-semibold text-primary cursor-pointer">Browse Files</label>
+                    </div>
+                    <input id="image-file" aria-label="Upload image" class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" type="file"/>
+                </div>
+                 <p id="status-msg" class="text-sm text-center"></p>
+                <button id="upload-btn" class="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-background-dark transition-all">
+                    Upload
+                </button>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Re-add the modal from the original file for image previews -->
+<div id="image-modal" style="display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9);">
+  <span id="modal-close" style="position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; transition: 0.3s; cursor: pointer;">&times;</span>
+  <img id="modal-img" style="margin: auto; display: block; width: auto; max-width: 90%; max-height: 90%; object-fit: contain; padding-top: 50px;">
+</div>
+
+<script src="popup.js"></script>
 </body>
 </html>
