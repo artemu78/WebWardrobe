@@ -63,6 +63,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Add toggle functionality
+  document.querySelectorAll('[data-toggle-button]').forEach(button => {
+    button.addEventListener('click', () => {
+      const targetId = button.getAttribute('data-toggle-button');
+      const targetElement = document.getElementById(targetId);
+      const icon = button.querySelector('.material-icons-outlined');
+
+      if (targetElement) {
+        const isHidden = targetElement.classList.toggle('hidden');
+        icon.textContent = isHidden ? 'expand_more' : 'expand_less';
+      }
+    });
+  });
+
   /**
    * Display the main UI, hide the authentication UI, load the user's images, and attach top-up and upload handlers.
    * @param {string} token - OAuth bearer token used for authenticated API requests.
@@ -81,19 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // Add toggle functionality
-    document.querySelectorAll('[data-toggle-button]').forEach(button => {
-        button.addEventListener('click', () => {
-            const targetId = button.getAttribute('data-toggle-button');
-            const targetElement = document.getElementById(targetId);
-            const icon = button.querySelector('.material-icons-outlined');
 
-            if (targetElement) {
-                const isHidden = targetElement.classList.toggle('hidden');
-                icon.textContent = isHidden ? 'expand_more' : 'expand_less';
-            }
-        });
-    });
 
     // Setup Upload
     uploadBtn.onclick = async () => {
