@@ -51,9 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Modal Logic
   const modal = document.getElementById("image-modal");
   const modalImg = document.getElementById("modal-img");
-  const span = document.getElementsByClassName("close")[0];
+  const modalClose = document.getElementById("modal-close");
 
-  span.onclick = function() { 
+  modalClose.onclick = function() {
     modal.style.display = "none";
   }
   
@@ -63,6 +63,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Add toggle functionality
+  document.querySelectorAll('[data-toggle-button]').forEach(button => {
+    button.addEventListener('click', () => {
+      const targetId = button.getAttribute('data-toggle-button');
+      const targetElement = document.getElementById(targetId);
+      const icon = button.querySelector('.material-icons-outlined');
+
+      if (targetElement) {
+        const isHidden = targetElement.classList.toggle('hidden');
+        icon.textContent = isHidden ? 'expand_more' : 'expand_less';
+      }
+    });
+  });
+
   /**
    * Display the main UI, hide the authentication UI, load the user's images, and attach top-up and upload handlers.
    * @param {string} token - OAuth bearer token used for authenticated API requests.
@@ -71,6 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
     authSection.classList.add('hidden');
     mainSection.classList.remove('hidden');
     loadImages(token);
+    // Also load generated images
+    loadGeneratedImages(token);
 
     // Setup TopUp
     if (topupBtn) {
@@ -78,6 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
              alert("Top-up functionality coming soon!");
         };
     }
+
+
 
     // Setup Upload
     uploadBtn.onclick = async () => {
@@ -178,8 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
    * @param {string} token - Bearer token used to authenticate requests to the images API.
    */
   async function loadImages(token) {
-    const listDiv = document.getElementById('image-list');
-    listDiv.innerHTML = 'Loading...';
+    const listDiv = document.getElementById('selfies-list');
+    listDiv.innerHTML = '<p class="text-gray-500 dark:text-gray-400">Loading...</p>';
     
     try {
       const res = await fetch(`${API_BASE_URL}/user/images`, {
@@ -187,76 +205,62 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       
       if (res.status === 401) {
-          listDiv.innerHTML = '<span style="color:red">Session expired. Please Sign Out.</span>';
+          listDiv.innerHTML = '<p class="text-red-500">Session expired. Please Sign Out.</p>';
           return;
       }
 
       const data = await res.json();
       
+      // Update credits separately
       if (data.credits !== undefined) {
           creditCount.textContent = data.credits;
           if (data.credits <= 0) {
-              creditCount.style.color = 'red';
+              creditCount.classList.add('text-red-500');
           } else {
-              creditCount.style.color = 'black';
+              creditCount.classList.remove('text-red-500');
           }
       }
 
-      listDiv.innerHTML = '';
+      listDiv.innerHTML = ''; // Clear loading message
       if (data.images && data.images.length > 0) {
         data.images.forEach(img => {
           const div = document.createElement('div');
-          div.className = 'image-item';
+          div.className = 'bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex items-center space-x-4';
           
-          // Use thumbnail if available, else original
           const displayUrl = img.thumbnailUrl || img.s3Url;
           
           div.innerHTML = `
-            <div class="image-info" title="Click to view original">
-                <img src="${displayUrl}" alt="${img.name}">
-                <span>${img.name}</span>
+            <img alt="${img.name}" class="w-16 h-16 object-cover rounded-md cursor-pointer view-btn" src="${displayUrl}">
+            <div class="flex-1">
+                <p class="font-medium text-gray-900 dark:text-white">${img.name}</p>
             </div>
-            <div class="image-actions">
-                <a href="${img.s3Url}" download="${img.name}" target="_blank" class="action-btn" title="Download">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                </a>
-                <button class="action-btn rename-btn" data-id="${img.id}" title="Rename">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
+            <div class="flex items-center space-x-1 text-gray-500 dark:text-gray-400">
+                <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full rename-btn" title="Rename">
+                    <span class="material-icons-outlined text-xl">edit</span>
                 </button>
-                <button class="action-btn delete-btn" data-id="${img.id}" title="Delete">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
+                <a href="${img.s3Url}" download="${img.name}" target="_blank" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full" title="Download">
+                    <span class="material-icons-outlined text-xl">download</span>
+                </a>
+                <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full delete-btn" title="Delete">
+                    <span class="material-icons-outlined text-xl text-red-500">delete</span>
                 </button>
             </div>
           `;
           
-          // Click to view original
-          div.querySelector('.image-info').onclick = () => {
+          // Attach event listeners
+          div.querySelector('.view-btn').onclick = () => {
               modal.style.display = "block";
               modalImg.src = img.s3Url;
           };
 
-          // Rename action
-          div.querySelector('.rename-btn').onclick = async (e) => {
-              e.stopPropagation();
+          div.querySelector('.rename-btn').onclick = async () => {
               const newName = prompt("Enter new name:", img.name);
               if (newName && newName !== img.name) {
                   await renameImage(img.id, newName, token);
               }
           };
 
-          // Delete action
-          div.querySelector('.delete-btn').onclick = async (e) => {
-              e.stopPropagation();
+          div.querySelector('.delete-btn').onclick = async () => {
               if (confirm(`Delete "${img.name}"?`)) {
                   await deleteImage(img.id, token);
               }
@@ -265,10 +269,11 @@ document.addEventListener('DOMContentLoaded', () => {
           listDiv.appendChild(div);
         });
       } else {
-        listDiv.textContent = "No images yet.";
+        listDiv.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">No selfies yet. Upload one below!</p>';
       }
     } catch (e) {
-      listDiv.textContent = "Failed to load images.";
+      console.error("Failed to load images:", e);
+      listDiv.innerHTML = '<p class="text-red-500">Failed to load images.</p>';
     }
   }
 
@@ -296,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function deleteImage(fileId, token) {
-      const listDiv = document.getElementById('image-list');
+      const listDiv = document.getElementById('selfies-list');
       try {
           const res = await fetch(`${API_BASE_URL}/user/images/${fileId}`, {
               method: 'DELETE',
@@ -352,4 +357,79 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(file);
     });
   }
+
+  async function loadGeneratedImages(token) {
+    const listDiv = document.getElementById('generated-images-list');
+    listDiv.innerHTML = '<p class="text-gray-500 dark:text-gray-400">Loading...</p>';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/user/generations`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.status === 401) {
+            listDiv.innerHTML = '<p class="text-red-500">Session expired. Please Sign Out.</p>';
+            return;
+        }
+
+        const data = await res.json();
+        listDiv.innerHTML = ''; // Clear loading message
+
+        if (data.generations && data.generations.length > 0) {
+            data.generations.forEach(gen => {
+                const div = document.createElement('div');
+                div.className = 'bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex items-center space-x-4';
+
+                div.innerHTML = `
+                    <img alt="Generated image" class="w-16 h-16 object-cover rounded-md cursor-pointer view-btn" src="${gen.resultUrl}">
+                    <div class="flex-1">
+                        <a href="${gen.siteUrl}" target="_blank" class="font-medium text-primary hover:underline">View on site</a>
+                    </div>
+                    <div class="flex items-center space-x-1 text-gray-500 dark:text-gray-400">
+                         <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full delete-gen-btn" title="Delete">
+                            <span class="material-icons-outlined text-xl text-red-500">delete</span>
+                        </button>
+                    </div>
+                `;
+
+                // Attach event listeners
+                div.querySelector('.view-btn').onclick = () => {
+                    modal.style.display = "block";
+                    modalImg.src = gen.resultUrl;
+                };
+
+                div.querySelector('.delete-gen-btn').onclick = async () => {
+                    if (confirm(`Delete this generated image?`)) {
+                        await deleteGeneratedImage(gen.jobId, token);
+                    }
+                };
+
+                listDiv.appendChild(div);
+            });
+        } else {
+            listDiv.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">No generated images yet.</p>';
+        }
+    } catch (e) {
+        console.error("Failed to load generated images:", e);
+        listDiv.innerHTML = '<p class="text-red-500">Failed to load generated images.</p>';
+    }
+  }
+
+  async function deleteGeneratedImage(jobId, token) {
+      try {
+          const res = await fetch(`${API_BASE_URL}/user/generations/${jobId}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (!res.ok) throw new Error("Failed to delete generated image");
+
+          loadGeneratedImages(token); // Reload list
+
+      } catch (e) {
+          alert("Error deleting image: " + e.message);
+      }
+  }
+
+
 });
