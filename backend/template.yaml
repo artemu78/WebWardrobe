@@ -134,7 +134,7 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref TryOnUserProfilesTable
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref TryOnUserGenerationsTable
         - S3CrudPolicy:
             BucketName: !Ref TryOnBucket
@@ -180,6 +180,12 @@ Resources:
             ApiId: !Ref TryOnApi
             Path: /user/images/{fileId}
             Method: PATCH
+        DeleteGeneration:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TryOnApi
+            Path: /user/generations/{jobId}
+            Method: DELETE
 
   # -------------------------------------------------------------------------
   # Status Lambda (Polling)

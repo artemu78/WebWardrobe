@@ -248,7 +248,8 @@ def profile_handler(event, context):
                         'resultUrl': item.get('resultUrl'),
                         'itemUrl': item.get('itemUrl'),
                         'siteUrl': item.get('siteUrl'),
-                        'timestamp': item.get('timestamp')
+                        'timestamp': item.get('timestamp'),
+                        'jobId': item.get('jobId')
                     })
 
                 return {
@@ -257,6 +258,58 @@ def profile_handler(event, context):
                 }
             except Exception as e:
                 print(f"Error fetching generations: {e}")
+                return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+
+        # DELETE /user/generations/{jobId}
+        elif method == 'DELETE' and 'generations' in path:
+            parts = path.split('/')
+            if len(parts) < 4:
+                 return {'statusCode': 400, 'body': json.dumps({'error': 'Invalid path'})}
+            
+            job_id = parts[-1]
+            generations_table_name = os.environ['USER_GENERATIONS_TABLE_NAME']
+            gen_table = dynamodb.Table(generations_table_name)
+
+            # We need timestamp to delete, so we must query first
+            try:
+                # Query all user generations to find the one with matching jobId
+                # This is not efficient for large datasets but fine for per-user lists
+                response = gen_table.query(
+                    KeyConditionExpression=boto3.dynamodb.conditions.Key('userId').eq(user_id)
+                )
+                items = response.get('Items', [])
+                target_gen = next((g for g in items if g.get('jobId') == job_id), None)
+
+                if not target_gen:
+                    return {'statusCode': 404, 'body': json.dumps({'error': 'Generation not found'})}
+
+                # Delete from S3
+                # resultUrl format: https://{bucket}.s3.amazonaws.com/{key}
+                result_url = target_gen.get('resultUrl', '')
+                if result_url:
+                    try:
+                        # Extract key from URL
+                        # Assuming standard S3 URL format
+                        s3_key = result_url.split('.amazonaws.com/')[-1]
+                        s3_client.delete_object(Bucket=bucket_name, Key=s3_key)
+                    except Exception as e:
+                        print(f"Failed to delete generation from S3: {e}")
+
+                # Delete from DynamoDB
+                gen_table.delete_item(
+                    Key={
+                        'userId': user_id,
+                        'timestamp': target_gen['timestamp']
+                    }
+                )
+
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({'message': 'Generation deleted'})
+                }
+
+            except Exception as e:
+                print(f"Error deleting generation: {e}")
                 return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
 
         # POST /user/images/upload-url
