@@ -20,6 +20,10 @@ venv/
 # IDE
 .vscode/
 .idea/
+dist/
+
+# Extension
+extension.pem
+extension.crx
 extension/node_modules
 extension/archives
-dist/
