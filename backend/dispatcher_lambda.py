@@ -75,6 +75,10 @@ def dispatcher_handler(event, context):
     - 404: user profile or selfie not found
     - 500: unexpected error with error message
     """
+    credit_deducted = False
+    user_id = None
+    user_table = None
+
     try:
         body = json.loads(event.get('body', '{}'))
         item_url = body.get('itemUrl')
@@ -137,6 +141,7 @@ def dispatcher_handler(event, context):
                     ':zero': 0
                 }
             )
+            credit_deducted = True
         except ClientError as e:
             if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
                  return {
@@ -190,6 +195,19 @@ def dispatcher_handler(event, context):
 
     except Exception as e:
         print(f"Error in dispatcher: {e}")
+        
+        # Refund if deducted but failed to start
+        if credit_deducted and user_id and user_table:
+            try:
+                print(f"Refunding credit for user {user_id} due to dispatcher error")
+                user_table.update_item(
+                    Key={'userId': user_id},
+                    UpdateExpression="set credits = credits + :inc",
+                    ExpressionAttributeValues={':inc': 1}
+                )
+            except Exception as refund_error:
+                print(f"Failed to refund credit: {refund_error}")
+
         return {
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
@@ -692,6 +710,20 @@ def saver_handler(event, context):
                     ':t': datetime.datetime.utcnow().isoformat()
                 }
             )
+            # Refund credit
+            if user_id:
+                try:
+                    user_table_name = os.environ['USER_TABLE_NAME']
+                    user_table = dynamodb.Table(user_table_name)
+                    print(f"Refunding credit for user {user_id} due to job failure")
+                    user_table.update_item(
+                        Key={'userId': user_id},
+                        UpdateExpression="set credits = credits + :inc",
+                        ExpressionAttributeValues={':inc': 1}
+                    )
+                except Exception as refund_error:
+                    print(f"Failed to refund credit: {refund_error}")
+
             return {'status': 'FAILED', 'error': error_msg}
 
         # 2. Handle Success (Result already in S3 from Generator)

@@ -9,6 +9,8 @@
         "userId.$": "$.userId",
         "itemUrl.$": "$.itemUrl",
         "selfieUrl.$": "$.selfieUrl",
+        "selfieId.$": "$.selfieId",
+        "siteUrl.$": "$.siteUrl",
         "apiPayload": {
           "clothes_image_url.$": "$.itemUrl",
           "user_image_url.$": "$.selfieUrl",
@@ -24,13 +26,20 @@
         "FunctionName": "${GeneratorFunctionArn}",
         "Payload": {
           "jobId.$": "$.jobId",
+          "userId.$": "$.userId",
           "itemUrl.$": "$.itemUrl",
-          "selfieUrl.$": "$.selfieUrl"
+          "selfieUrl.$": "$.selfieUrl",
+          "selfieId.$": "$.selfieId",
+          "siteUrl.$": "$.siteUrl"
         }
       },
       "Retry": [
         {
-          "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
           "IntervalSeconds": 2,
           "MaxAttempts": 3,
           "BackoffRate": 2
@@ -38,7 +47,9 @@
       ],
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "ResultPath": "$.errorInfo",
           "Next": "JobFailed"
         }
@@ -59,7 +70,11 @@
       },
       "Retry": [
         {
-          "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
           "IntervalSeconds": 2,
           "MaxAttempts": 6,
           "BackoffRate": 2

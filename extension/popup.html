@@ -69,7 +69,7 @@
                     <label class="sr-only" for="image-name">Image Name</label>
                     <input class="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary focus:border-primary dark:text-white placeholder-gray-400 dark:placeholder-gray-500" id="image-name" placeholder="Name (e.g., My selfie)" type="text"/>
                 </div>
-                <div id="upload-drop-zone" class="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary dark:hover:border-primary transition-colors min-h-[200px] flex flex-col justify-center items-center">
+                <div id="upload-drop-zone" class="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary dark:hover:border-primary transition-colors min-h-[300px] flex flex-col justify-center items-center">
                     
                     <input id="image-file" aria-label="Upload image" class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer z-10" type="file" accept="image/*"/>
 
@@ -82,8 +82,8 @@
 
                     <div id="upload-preview-state" class="hidden absolute top-0 left-0 w-full h-full p-2 z-20 bg-white dark:bg-gray-800 rounded-lg">
                         <img id="upload-preview-img" class="w-full h-full object-contain rounded-md" alt="Preview"/>
-                        <button id="upload-remove-btn" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-md transition-colors flex items-center justify-center" title="Remove image">
-                            <span class="material-icons-outlined text-lg">close</span>
+                        <button id="upload-remove-btn" class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 shadow-lg border-2 border-white transition-colors flex items-center justify-center z-30" title="Remove image">
+                            <span class="material-icons-outlined text-xl">delete</span>
                         </button>
                     </div>
                 </div>

@@ -245,11 +245,14 @@ Resources:
             TableName: !Ref TryOnJobsTable
         - DynamoDBCrudPolicy:
             TableName: !Ref TryOnUserGenerationsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TryOnUserProfilesTable
       Environment:
         Variables:
           TABLE_NAME: !Ref TryOnJobsTable
           USER_GENERATIONS_TABLE_NAME: !Ref TryOnUserGenerationsTable
           BUCKET_NAME: !Ref TryOnBucket
+          USER_TABLE_NAME: !Ref TryOnUserProfilesTable
 
   # -------------------------------------------------------------------------
   # S3 Bucket

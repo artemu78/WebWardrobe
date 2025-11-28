@@ -171,11 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
       loadGeneratedImages(token);
     });
     // Setup Profile
-    if (profileBtn) {
-        profileBtn.onclick = () => {
-            alert("Profile functionality coming soon!");
-        };
-    }
+
 
 
 
