@@ -1,4 +1,5 @@
 const API_BASE_URL = "https://nw2ghqgbe5.execute-api.us-east-1.amazonaws.com/prod";
+const SITE_BASE_URL = "https://web-wardrobe.netlify.app";
 
 document.addEventListener('DOMContentLoaded', () => {
   const loginBtn = document.getElementById('login-btn');
@@ -40,6 +41,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     });
+  }
+
+  if (topupBtn) {
+      topupBtn.addEventListener('click', () => {
+          const lang = navigator.language.split('-')[0].toUpperCase();
+          const supportedLangs = ['EN', 'RU', 'DE', 'ES'];
+          const finalLang = supportedLangs.includes(lang) ? lang : 'EN';
+          
+          const url = `${SITE_BASE_URL}/?lang=${finalLang}#tariffs`;
+          chrome.tabs.create({ url: url });
+      });
   }
 
   function showLogin() {
@@ -450,14 +462,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 const div = document.createElement('div');
                 div.className = 'bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex items-center space-x-4';
 
-                const timestamp = gen.timestamp ? new Date(gen.timestamp).toLocaleString(undefined, { 
-                    year: 'numeric', 
-                    month: 'numeric', 
-                    day: 'numeric', 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    hour12: false 
-                }) : '';
+                let timestamp = '';
+                if (gen.timestamp) {
+                    // Ensure timestamp is treated as UTC if it doesn't have timezone info
+                    const timeStr = gen.timestamp.endsWith('Z') ? gen.timestamp : gen.timestamp + 'Z';
+                    timestamp = new Date(timeStr).toLocaleString(undefined, { 
+                        year: 'numeric', 
+                        month: 'numeric', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        hour12: false 
+                    });
+                }
+
                 div.innerHTML = `
                     <img alt="Generated image" class="w-16 h-16 object-cover rounded-md cursor-pointer view-btn" src="${gen.resultUrl}">
                     <div class="flex-1">
