@@ -47,7 +47,7 @@
 
         <section id="generated-section" class="space-y-6">
             <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white">Generated Images</h2>
+                <h2 id="generated-section-title" class="text-xl font-bold text-gray-900 dark:text-white">Generated Images</h2>
                 <button data-toggle-button="generated-images-list" class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
                     <span class="material-icons-outlined">expand_less</span>
                 </button>
@@ -69,14 +69,23 @@
                     <label class="sr-only" for="image-name">Image Name</label>
                     <input class="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary focus:border-primary dark:text-white placeholder-gray-400 dark:placeholder-gray-500" id="image-name" placeholder="Name (e.g., My selfie)" type="text"/>
                 </div>
-                <div class="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary dark:hover:border-primary transition-colors cursor-pointer">
-                    <div class="flex flex-col items-center justify-center space-y-2 text-gray-500 dark:text-gray-400">
+                <div id="upload-drop-zone" class="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary dark:hover:border-primary transition-colors min-h-[200px] flex flex-col justify-center items-center">
+                    
+                    <input id="image-file" aria-label="Upload image" class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer z-10" type="file" accept="image/*"/>
+
+                    <div id="upload-empty-state" class="flex flex-col items-center justify-center space-y-2 text-gray-500 dark:text-gray-400 pointer-events-none">
                         <span class="material-icons-outlined text-4xl">cloud_upload</span>
-                        <p class="font-medium">Drag & drop files here</p>
+                        <p id="upload-text" class="font-medium">Drag & drop files here</p>
                         <p class="text-sm">or</p>
-                        <label for="image-file" class="font-semibold text-primary cursor-pointer">Browse Files</label>
+                        <span class="font-semibold text-primary">Browse Files</span>
                     </div>
-                    <input id="image-file" aria-label="Upload image" class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" type="file"/>
+
+                    <div id="upload-preview-state" class="hidden absolute top-0 left-0 w-full h-full p-2 z-20 bg-white dark:bg-gray-800 rounded-lg">
+                        <img id="upload-preview-img" class="w-full h-full object-contain rounded-md" alt="Preview"/>
+                        <button id="upload-remove-btn" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-md transition-colors flex items-center justify-center" title="Remove image">
+                            <span class="material-icons-outlined text-lg">close</span>
+                        </button>
+                    </div>
                 </div>
                  <p id="status-msg" class="text-sm text-center"></p>
                 <button id="upload-btn" class="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-background-dark transition-all">

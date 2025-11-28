@@ -77,6 +77,72 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+
+  // File Upload UI
+  const dropZone = document.getElementById('upload-drop-zone');
+  const fileInput = document.getElementById('image-file');
+  const emptyState = document.getElementById('upload-empty-state');
+  const previewState = document.getElementById('upload-preview-state');
+  const previewImg = document.getElementById('upload-preview-img');
+  const removeBtn = document.getElementById('upload-remove-btn');
+
+  function showPreview(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+          previewImg.src = e.target.result;
+          emptyState.classList.add('hidden');
+          previewState.classList.remove('hidden');
+          dropZone.classList.add('border-primary');
+          dropZone.classList.remove('border-gray-300', 'dark:border-gray-600');
+      };
+      reader.readAsDataURL(file);
+  }
+
+  function resetUpload() {
+      fileInput.value = '';
+      previewImg.src = '';
+      previewState.classList.add('hidden');
+      emptyState.classList.remove('hidden');
+      dropZone.classList.remove('border-primary');
+      dropZone.classList.add('border-gray-300', 'dark:border-gray-600');
+  }
+
+  if (dropZone && fileInput && emptyState && previewState && removeBtn) {
+      fileInput.addEventListener('change', () => {
+          if (fileInput.files.length > 0) {
+              showPreview(fileInput.files[0]);
+          }
+      });
+
+      removeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          resetUpload();
+      });
+
+      dropZone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          if (previewState.classList.contains('hidden')) {
+             dropZone.classList.add('border-primary', 'bg-gray-50', 'dark:bg-gray-700');
+          }
+      });
+
+      dropZone.addEventListener('dragleave', (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('border-primary', 'bg-gray-50', 'dark:bg-gray-700');
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('border-primary', 'bg-gray-50', 'dark:bg-gray-700');
+          
+          if (e.dataTransfer.files.length > 0) {
+              fileInput.files = e.dataTransfer.files;
+              showPreview(e.dataTransfer.files[0]);
+          }
+      });
+  }
+
   /**
    * Display the main UI, hide the authentication UI, load the user's images, and attach top-up and upload handlers.
    * @param {string} token - OAuth bearer token used for authenticated API requests.
@@ -88,10 +154,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Also load generated images
     loadGeneratedImages(token);
 
-    // Setup TopUp
-    if (topupBtn) {
-        topupBtn.onclick = () => {
-             alert("Top-up functionality coming soon!");
+
+    document.getElementById('generated-section-title').addEventListener('dblclick', () => {
+      loadGeneratedImages(token);
+    });
+    // Setup Profile
+    if (profileBtn) {
+        profileBtn.onclick = () => {
+            alert("Profile functionality coming soon!");
         };
     }
 
@@ -173,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         statusMsg.textContent = "Upload complete!";
         nameInput.value = '';
-        fileInput.value = '';
+        resetUpload();
         loadImages(token);
         
         // Refresh context menu
@@ -380,10 +450,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const div = document.createElement('div');
                 div.className = 'bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex items-center space-x-4';
 
+                const timestamp = gen.timestamp ? new Date(gen.timestamp).toLocaleString(undefined, { 
+                    year: 'numeric', 
+                    month: 'numeric', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    hour12: false 
+                }) : '';
                 div.innerHTML = `
                     <img alt="Generated image" class="w-16 h-16 object-cover rounded-md cursor-pointer view-btn" src="${gen.resultUrl}">
                     <div class="flex-1">
                         <a href="${gen.siteUrl}" target="_blank" class="font-medium text-primary hover:underline">View on site</a>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${timestamp}</p>
                     </div>
                     <div class="flex items-center space-x-1 text-gray-500 dark:text-gray-400">
                         <a href="${gen.resultUrl}" download="generated-image.png" target="_blank" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full" title="Download">
