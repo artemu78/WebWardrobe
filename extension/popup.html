@@ -5,39 +5,7 @@
 <title>Your Wardrobe</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-<script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            primary: "#4F46E5",
-            "background-light": "#F9FAFB",
-            "background-dark": "#111827",
-          },
-          fontFamily: {
-            display: ["Roboto", "sans-serif"],
-          },
-          borderRadius: {
-            DEFAULT: "0.5rem",
-          },
-        },
-      },
-    };
-  </script>
-<style>
-    body {
-      font-family: 'Roboto', sans-serif;
-    }
-    /* The design reference uses a fixed height, but for a browser extension popup,
-       it's better to let the content define the height. Let's set a min-width
-       to match the design's look. */
-    body {
-      width: 24rem; /* max-w-sm is 24rem */
-      padding: 1.5rem; /* p-6 is 1.5rem */
-    }
-  </style>
+<link href="style.css" rel="stylesheet"/>
   </head>
 <body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 font-display">
 

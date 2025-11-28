@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles from popup.html */
+body {
+  font-family: 'Roboto', sans-serif;
+  width: 24rem;
+  padding: 1.5rem;
+}

@@ -386,6 +386,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <a href="${gen.siteUrl}" target="_blank" class="font-medium text-primary hover:underline">View on site</a>
                     </div>
                     <div class="flex items-center space-x-1 text-gray-500 dark:text-gray-400">
+                        <a href="${gen.resultUrl}" download="generated-image.png" target="_blank" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full" title="Download">
+                            <span class="material-icons-outlined text-xl">download</span>
+                        </a>
                          <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full delete-gen-btn" title="Delete">
                             <span class="material-icons-outlined text-xl text-red-500">delete</span>
                         </button>
