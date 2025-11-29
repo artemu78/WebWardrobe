@@ -16,6 +16,8 @@ venv/
 
 # Mac
 .DS_Store
+backend/.DS_Store
+extension/.DS_Store
 
 # IDE
 .vscode/

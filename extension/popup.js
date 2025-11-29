@@ -13,11 +13,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const logoutBtn = document.getElementById('logout-btn');
 
   // Check Auth
-  chrome.identity.getAuthToken({ interactive: false }, function(token) {
-    if (token) {
-      showMain(token);
-    }
-  });
+  if (!localStorage.getItem('signedOut')) {
+    chrome.identity.getAuthToken({ interactive: false }, function(token) {
+      if (token) {
+        showMain(token);
+      }
+    });
+  }
 
   loginBtn.addEventListener('click', () => {
     chrome.identity.getAuthToken({ interactive: true }, function(token) {
@@ -55,9 +57,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showLogin() {
+    localStorage.setItem('signedOut', 'true');
     authSection.classList.remove('hidden');
     mainSection.classList.add('hidden');
-    document.getElementById('image-list').innerHTML = '';
+    
+    const selfiesList = document.getElementById('selfies-list');
+    if (selfiesList) selfiesList.innerHTML = '';
+    
+    const genList = document.getElementById('generated-images-list');
+    if (genList) genList.innerHTML = '';
   }
 
   // Modal Logic
@@ -160,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * @param {string} token - OAuth bearer token used for authenticated API requests.
    */
   function showMain(token) {
+    localStorage.removeItem('signedOut');
     authSection.classList.add('hidden');
     mainSection.classList.remove('hidden');
     loadImages(token);
