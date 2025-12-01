@@ -258,3 +258,13 @@ function pollStatus(jobId, originalUrl, tabId) {
     }
   }, 3000);
 }
+
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    startTryOnJob,
+    pollStatus,
+    refreshContextMenu,
+    API_BASE_URL
+  };
+}

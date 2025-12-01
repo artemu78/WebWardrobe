@@ -29,3 +29,6 @@ extension.pem
 extension.crx
 extension/node_modules
 extension/archives
+extension/.DS_Store
+extension/web-wardrobe-chrome*
+

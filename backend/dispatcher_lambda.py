@@ -22,7 +22,7 @@ def get_user_id_from_token(event):
     or x-user-id header (Mock/Legacy).
     """
     headers = event.get('headers', {})
-    
+
     # 1. Check for Authorization header (Bearer Token)
     auth_header = headers.get('authorization') or headers.get('Authorization')
     if auth_header:
@@ -50,6 +50,30 @@ def get_user_id_from_token(event):
         return body.get('userId')
     except:
         return None
+
+def get_user_info_from_token(event):
+    """Extract user email and name from Google OAuth token if available.
+    Returns a dict with keys 'email' and 'name' when found, otherwise None.
+    """
+    headers = event.get('headers', {})
+    auth_header = headers.get('authorization') or headers.get('Authorization')
+    if auth_header:
+        token = auth_header.replace('Bearer ', '').strip()
+        try:
+            url = f"https://www.googleapis.com/oauth2/v3/tokeninfo?access_token={token}"
+            with urllib.request.urlopen(url) as response:
+                data = json.loads(response.read().decode())
+                # tokeninfo may contain 'email' and 'name'
+                user_info = {}
+                if 'email' in data:
+                    user_info['email'] = data['email']
+                if 'name' in data:
+                    user_info['name'] = data['name']
+                return user_info if user_info else None
+        except Exception as e:
+            print(f"User info extraction failed: {e}")
+    # Fallback: no info available
+    return None
 
 def dispatcher_handler(event, context):
     """
@@ -98,13 +122,49 @@ def dispatcher_handler(event, context):
         
         user_profile = user_table.get_item(Key={'userId': user_id}).get('Item')
 
-        # Initialize profile if not found, but we need selfie so it should exist normally.
-        # However, we must ensure credits exist.
+        # Initialize profile if not found, creating with name and email if available
         if not user_profile:
-             # Create new profile with 5 credits?
-             # Technically they can't upload selfie without profile creation usually,
-             # but let's handle it gracefully or return error.
-             return {'statusCode': 404, 'body': json.dumps({'error': 'User profile not found'})}
+            # Attempt to extract user info from token (email and name)
+            user_info = get_user_info_from_token(event)
+            new_profile = {
+                'userId': user_id,
+                'credits': 5,
+                'images': []
+            }
+            if user_info:
+                if 'email' in user_info:
+                    new_profile['email'] = user_info['email']
+                if 'name' in user_info:
+                    new_profile['name'] = user_info['name']
+            # Store the new profile in DynamoDB
+            user_table.put_item(Item=new_profile)
+            user_profile = new_profile
+            # Continue processing with the newly created profile
+            # Also ensure name/email are stored if present in token (for existing profiles)
+            if not user_info:
+                user_info = get_user_info_from_token(event)
+            if user_info:
+                update_expr = []
+                expr_attrs = {}
+                if 'email' in user_info and 'email' not in user_profile:
+                    update_expr.append('#e = :e')
+                    expr_attrs[':e'] = user_info['email']
+                if 'name' in user_info and 'name' not in user_profile:
+                    update_expr.append('#n = :n')
+                    expr_attrs[':n'] = user_info['name']
+                if update_expr:
+                    update_expression = 'SET ' + ', '.join(update_expr)
+                    expression_attribute_names = {}
+                    if '#e' in update_expression:
+                        expression_attribute_names['#e'] = 'email'
+                    if '#n' in update_expression:
+                        expression_attribute_names['#n'] = 'name'
+                    user_table.update_item(
+                        Key={'userId': user_id},
+                        UpdateExpression=update_expression,
+                        ExpressionAttributeNames=expression_attribute_names,
+                        ExpressionAttributeValues=expr_attrs
+                    )
 
         # Check credits
         credits = user_profile.get('credits', 0)

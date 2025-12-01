@@ -1,0 +1,1 @@
+# Stub botocore package
