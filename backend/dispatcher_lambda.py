@@ -108,6 +108,7 @@ def dispatcher_handler(event, context):
         item_url = body.get('itemUrl')
         selfie_id = body.get('selfieId')
         site_url = body.get('siteUrl')
+        site_title = body.get('siteTitle')
         user_id = get_user_id_from_token(event)
 
         if not item_url or not selfie_id or not user_id:
@@ -223,7 +224,8 @@ def dispatcher_handler(event, context):
             'itemUrl': item_url,
             'selfieUrl': selfie_url,
             'selfieId': selfie_id,
-            'siteUrl': site_url
+            'siteUrl': site_url,
+            'siteTitle': site_title
         }
 
         # Initialize Job Status in DynamoDB
@@ -327,7 +329,8 @@ def profile_handler(event, context):
                         'itemUrl': item.get('itemUrl'),
                         'siteUrl': item.get('siteUrl'),
                         'timestamp': item.get('timestamp'),
-                        'jobId': item.get('jobId')
+                        'jobId': item.get('jobId'),
+                        'siteTitle': item.get('siteTitle')
                     })
 
                 return {
@@ -639,6 +642,7 @@ def generator_handler(event, context):
         selfie_url = event['selfieUrl']
         selfie_id = event.get('selfieId')
         site_url = event.get('siteUrl')
+        site_title = event.get('siteTitle')
         
         api_key = os.environ['GEMINI_API_KEY']
         api_url = os.environ['GEMINI_API_URL']
@@ -736,6 +740,7 @@ def generator_handler(event, context):
             'userId': user_id,
             'itemUrl': item_url,
             'siteUrl': site_url,
+            'siteTitle': site_title,
             'status': 'COMPLETED',
             'resultUrl': result_url
         }
@@ -806,6 +811,7 @@ def saver_handler(event, context):
                 try:
                     item_url = event.get('itemUrl')
                     site_url = event.get('siteUrl')
+                    site_title = event.get('siteTitle')
                     gen_table_name = os.environ['USER_GENERATIONS_TABLE_NAME']
                     gen_table = dynamodb.Table(gen_table_name)
                     gen_table.put_item(
@@ -815,7 +821,8 @@ def saver_handler(event, context):
                             'jobId': job_id,
                             'resultUrl': result_url,
                             'itemUrl': item_url,
-                            'siteUrl': site_url
+                            'siteUrl': site_url,
+                            'siteTitle': site_title
                         }
                     )
                 except Exception as e:

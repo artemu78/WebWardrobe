@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Check Auth
   if (!localStorage.getItem('signedOut')) {
-    chrome.identity.getAuthToken({ interactive: false }, function(token) {
+    chrome.identity.getAuthToken({ interactive: false }, function (token) {
       if (token) {
         showMain(token);
       }
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   loginBtn.addEventListener('click', () => {
-    chrome.identity.getAuthToken({ interactive: true }, function(token) {
+    chrome.identity.getAuthToken({ interactive: true }, function (token) {
       if (chrome.runtime.lastError) {
         console.error(chrome.runtime.lastError);
         return;
@@ -33,9 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
-      chrome.identity.getAuthToken({ interactive: false }, function(token) {
+      chrome.identity.getAuthToken({ interactive: false }, function (token) {
         if (token) {
-          chrome.identity.removeCachedAuthToken({ token: token }, function() {
+          chrome.identity.removeCachedAuthToken({ token: token }, function () {
             showLogin();
           });
         } else {
@@ -46,24 +46,24 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (topupBtn) {
-      topupBtn.addEventListener('click', () => {
-          const lang = navigator.language.split('-')[0].toUpperCase();
-          const supportedLangs = ['EN', 'RU', 'DE', 'ES'];
-          const finalLang = supportedLangs.includes(lang) ? lang : 'EN';
-          
-          const url = `${SITE_BASE_URL}/?lang=${finalLang}#tariffs`;
-          chrome.tabs.create({ url: url });
-      });
+    topupBtn.addEventListener('click', () => {
+      const lang = navigator.language.split('-')[0].toUpperCase();
+      const supportedLangs = ['EN', 'RU', 'DE', 'ES'];
+      const finalLang = supportedLangs.includes(lang) ? lang : 'EN';
+
+      const url = `${SITE_BASE_URL}/?lang=${finalLang}#tariffs`;
+      chrome.tabs.create({ url: url });
+    });
   }
 
   function showLogin() {
     localStorage.setItem('signedOut', 'true');
     authSection.classList.remove('hidden');
     mainSection.classList.add('hidden');
-    
+
     const selfiesList = document.getElementById('selfies-list');
     if (selfiesList) selfiesList.innerHTML = '';
-    
+
     const genList = document.getElementById('generated-images-list');
     if (genList) genList.innerHTML = '';
   }
@@ -73,11 +73,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalImg = document.getElementById("modal-img");
   const modalClose = document.getElementById("modal-close");
 
-  modalClose.onclick = function() {
+  modalClose.onclick = function () {
     modal.style.display = "none";
   }
-  
-  window.onclick = function(event) {
+
+  window.onclick = function (event) {
     if (event.target == modal) {
       modal.style.display = "none";
     }
@@ -107,60 +107,60 @@ document.addEventListener('DOMContentLoaded', () => {
   const removeBtn = document.getElementById('upload-remove-btn');
 
   function showPreview(file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-          previewImg.src = e.target.result;
-          emptyState.classList.add('hidden');
-          previewState.classList.remove('hidden');
-          dropZone.classList.add('border-primary');
-          dropZone.classList.remove('border-gray-300', 'dark:border-gray-600');
-      };
-      reader.readAsDataURL(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImg.src = e.target.result;
+      emptyState.classList.add('hidden');
+      previewState.classList.remove('hidden');
+      dropZone.classList.add('border-primary');
+      dropZone.classList.remove('border-gray-300', 'dark:border-gray-600');
+    };
+    reader.readAsDataURL(file);
   }
 
   function resetUpload() {
-      fileInput.value = '';
-      previewImg.src = '';
-      previewState.classList.add('hidden');
-      emptyState.classList.remove('hidden');
-      dropZone.classList.remove('border-primary');
-      dropZone.classList.add('border-gray-300', 'dark:border-gray-600');
+    fileInput.value = '';
+    previewImg.src = '';
+    previewState.classList.add('hidden');
+    emptyState.classList.remove('hidden');
+    dropZone.classList.remove('border-primary');
+    dropZone.classList.add('border-gray-300', 'dark:border-gray-600');
   }
 
   if (dropZone && fileInput && emptyState && previewState && removeBtn) {
-      fileInput.addEventListener('change', () => {
-          if (fileInput.files.length > 0) {
-              showPreview(fileInput.files[0]);
-          }
-      });
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        showPreview(fileInput.files[0]);
+      }
+    });
 
-      removeBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          resetUpload();
-      });
+    removeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      resetUpload();
+    });
 
-      dropZone.addEventListener('dragover', (e) => {
-          e.preventDefault();
-          if (previewState.classList.contains('hidden')) {
-             dropZone.classList.add('border-primary', 'bg-gray-50', 'dark:bg-gray-700');
-          }
-      });
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (previewState.classList.contains('hidden')) {
+        dropZone.classList.add('border-primary', 'bg-gray-50', 'dark:bg-gray-700');
+      }
+    });
 
-      dropZone.addEventListener('dragleave', (e) => {
-          e.preventDefault();
-          dropZone.classList.remove('border-primary', 'bg-gray-50', 'dark:bg-gray-700');
-      });
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-primary', 'bg-gray-50', 'dark:bg-gray-700');
+    });
 
-      dropZone.addEventListener('drop', (e) => {
-          e.preventDefault();
-          dropZone.classList.remove('border-primary', 'bg-gray-50', 'dark:bg-gray-700');
-          
-          if (e.dataTransfer.files.length > 0) {
-              fileInput.files = e.dataTransfer.files;
-              showPreview(e.dataTransfer.files[0]);
-          }
-      });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-primary', 'bg-gray-50', 'dark:bg-gray-700');
+
+      if (e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        showPreview(e.dataTransfer.files[0]);
+      }
+    });
   }
 
   /**
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const nameInput = document.getElementById('image-name');
       const fileInput = document.getElementById('image-file');
       const statusMsg = document.getElementById('status-msg');
-      
+
       const name = nameInput.value;
       const file = fileInput.files[0];
 
@@ -210,15 +210,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const res1 = await fetch(`${API_BASE_URL}/user/images/upload-url`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-              filename: file.name, 
-              contentType: file.type,
-              includeThumbnail: true 
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+            includeThumbnail: true
           })
         });
-        
+
         if (res1.status === 401) {
-            throw new Error("Unauthorized. Please sign out and sign in again.");
+          throw new Error("Unauthorized. Please sign out and sign in again.");
         }
 
         const data1 = await res1.json();
@@ -235,9 +235,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // 3. Upload to S3 (Thumbnail)
         statusMsg.textContent = "Uploading thumbnail...";
         await fetch(data1.thumbnailUploadUrl, {
-            method: 'PUT',
-            body: thumbnailBlob,
-            headers: { 'Content-Type': file.type }
+          method: 'PUT',
+          body: thumbnailBlob,
+          headers: { 'Content-Type': file.type }
         });
 
         // 4. Confirm
@@ -252,17 +252,17 @@ document.addEventListener('DOMContentLoaded', () => {
             thumbnailS3Key: data1.thumbnailS3Key
           })
         });
-        
+
         if (!res3.ok) {
-            const err = await res3.json();
-            throw new Error(err.error || 'Failed to save profile');
+          const err = await res3.json();
+          throw new Error(err.error || 'Failed to save profile');
         }
 
         statusMsg.textContent = "Upload complete!";
         nameInput.value = '';
         resetUpload();
         loadImages(token);
-        
+
         // Refresh context menu
         chrome.runtime.sendMessage({ action: "refreshContextMenu" });
 
@@ -285,27 +285,27 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadImages(token) {
     const listDiv = document.getElementById('selfies-list');
     listDiv.innerHTML = '<p class="text-gray-500 dark:text-gray-400">Loading...</p>';
-    
+
     try {
       const res = await fetch(`${API_BASE_URL}/user/images`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      
+
       if (res.status === 401) {
-          listDiv.innerHTML = '<p class="text-red-500">Session expired. Please Sign Out.</p>';
-          return;
+        listDiv.innerHTML = '<p class="text-red-500">Session expired. Please Sign Out.</p>';
+        return;
       }
 
       const data = await res.json();
-      
+
       // Update credits separately
       if (data.credits !== undefined) {
-          creditCount.textContent = data.credits;
-          if (data.credits <= 0) {
-              creditCount.classList.add('text-red-500');
-          } else {
-              creditCount.classList.remove('text-red-500');
-          }
+        creditCount.textContent = data.credits;
+        if (data.credits <= 0) {
+          creditCount.classList.add('text-red-500');
+        } else {
+          creditCount.classList.remove('text-red-500');
+        }
       }
 
       listDiv.innerHTML = ''; // Clear loading message
@@ -313,9 +313,9 @@ document.addEventListener('DOMContentLoaded', () => {
         data.images.forEach(img => {
           const div = document.createElement('div');
           div.className = 'bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex items-center space-x-4';
-          
+
           const displayUrl = img.thumbnailUrl || img.s3Url;
-          
+
           div.innerHTML = `
             <img alt="${img.name}" class="w-16 h-16 object-cover rounded-md cursor-pointer view-btn" src="${displayUrl}">
             <div class="flex-1">
@@ -333,24 +333,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 </button>
             </div>
           `;
-          
+
           // Attach event listeners
           div.querySelector('.view-btn').onclick = () => {
-              modal.style.display = "block";
-              modalImg.src = img.s3Url;
+            modal.style.display = "block";
+            modalImg.src = img.s3Url;
           };
 
           div.querySelector('.rename-btn').onclick = async () => {
-              const newName = prompt("Enter new name:", img.name);
-              if (newName && newName !== img.name) {
-                  await renameImage(img.id, newName, token);
-              }
+            const newName = prompt("Enter new name:", img.name);
+            if (newName && newName !== img.name) {
+              await renameImage(img.id, newName, token);
+            }
           };
 
           div.querySelector('.delete-btn').onclick = async () => {
-              if (confirm(`Delete "${img.name}"?`)) {
-                  await deleteImage(img.id, token);
-              }
+            if (confirm(`Delete "${img.name}"?`)) {
+              await deleteImage(img.id, token);
+            }
           };
 
           listDiv.appendChild(div);
@@ -365,83 +365,83 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function renameImage(fileId, newName, token) {
-      try {
-          const res = await fetch(`${API_BASE_URL}/user/images/${fileId}`, {
-              method: 'PATCH',
-              headers: { 
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ name: newName })
-          });
-          
-          if (!res.ok) {
-              const err = await res.text();
-              throw new Error(`Failed to rename (${res.status}): ${err}`);
-          }
-          
-          loadImages(token); // Reload list
-          
-      } catch (e) {
-          alert("Error renaming image: " + e.message);
+    try {
+      const res = await fetch(`${API_BASE_URL}/user/images/${fileId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: newName })
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Failed to rename (${res.status}): ${err}`);
       }
+
+      loadImages(token); // Reload list
+
+    } catch (e) {
+      alert("Error renaming image: " + e.message);
+    }
   }
 
   async function deleteImage(fileId, token) {
-      const listDiv = document.getElementById('selfies-list');
-      try {
-          const res = await fetch(`${API_BASE_URL}/user/images/${fileId}`, {
-              method: 'DELETE',
-              headers: { 'Authorization': `Bearer ${token}` }
-          });
-          
-          if (!res.ok) throw new Error("Failed to delete");
-          
-          loadImages(token); // Reload list
-          chrome.runtime.sendMessage({ action: "refreshContextMenu" });
-          
-      } catch (e) {
-          alert("Error deleting image: " + e.message);
-      }
+    const listDiv = document.getElementById('selfies-list');
+    try {
+      const res = await fetch(`${API_BASE_URL}/user/images/${fileId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error("Failed to delete");
+
+      loadImages(token); // Reload list
+      chrome.runtime.sendMessage({ action: "refreshContextMenu" });
+
+    } catch (e) {
+      alert("Error deleting image: " + e.message);
+    }
   }
 
   function resizeImage(file, maxWidth, maxHeight) {
     return new Promise((resolve, reject) => {
-        const img = document.createElement('img');
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            img.src = e.target.result;
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
+      const img = document.createElement('img');
+      const reader = new FileReader();
 
-                // Calculate aspect ratio
-                if (width > height) {
-                    if (width > maxWidth) {
-                        height *= maxWidth / width;
-                        width = maxWidth;
-                    }
-                } else {
-                    if (height > maxHeight) {
-                        width *= maxHeight / height;
-                        height = maxHeight;
-                    }
-                }
+      reader.onload = function (e) {
+        img.src = e.target.result;
+        img.onload = function () {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
 
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
+          // Calculate aspect ratio
+          if (width > height) {
+            if (width > maxWidth) {
+              height *= maxWidth / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width *= maxHeight / height;
+              height = maxHeight;
+            }
+          }
 
-                canvas.toBlob((blob) => {
-                    resolve(blob);
-                }, file.type);
-            };
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob((blob) => {
+            resolve(blob);
+          }, file.type);
         };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
     });
   }
 
@@ -450,41 +450,41 @@ document.addEventListener('DOMContentLoaded', () => {
     listDiv.innerHTML = '<p class="text-gray-500 dark:text-gray-400">Loading...</p>';
 
     try {
-        const res = await fetch(`${API_BASE_URL}/user/generations`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+      const res = await fetch(`${API_BASE_URL}/user/generations`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-        if (res.status === 401) {
-            listDiv.innerHTML = '<p class="text-red-500">Session expired. Please Sign Out.</p>';
-            return;
-        }
+      if (res.status === 401) {
+        listDiv.innerHTML = '<p class="text-red-500">Session expired. Please Sign Out.</p>';
+        return;
+      }
 
-        const data = await res.json();
-        listDiv.innerHTML = ''; // Clear loading message
+      const data = await res.json();
+      listDiv.innerHTML = ''; // Clear loading message
 
-        if (data.generations && data.generations.length > 0) {
-            data.generations.forEach(gen => {
-                const div = document.createElement('div');
-                div.className = 'bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex items-center space-x-4';
+      if (data.generations && data.generations.length > 0) {
+        data.generations.forEach(gen => {
+          const div = document.createElement('div');
+          div.className = 'bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex items-center space-x-4';
 
-                let timestamp = '';
-                if (gen.timestamp) {
-                    // Ensure timestamp is treated as UTC if it doesn't have timezone info
-                    const timeStr = gen.timestamp.endsWith('Z') ? gen.timestamp : gen.timestamp + 'Z';
-                    timestamp = new Date(timeStr).toLocaleString(undefined, { 
-                        year: 'numeric', 
-                        month: 'numeric', 
-                        day: 'numeric', 
-                        hour: '2-digit', 
-                        minute: '2-digit', 
-                        hour12: false 
-                    });
-                }
+          let timestamp = '';
+          if (gen.timestamp) {
+            // Ensure timestamp is treated as UTC if it doesn't have timezone info
+            const timeStr = gen.timestamp.endsWith('Z') ? gen.timestamp : gen.timestamp + 'Z';
+            timestamp = new Date(timeStr).toLocaleString(undefined, {
+              year: 'numeric',
+              month: 'numeric',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            });
+          }
 
-                div.innerHTML = `
+          div.innerHTML = `
                     <img alt="Generated image" class="w-16 h-16 object-cover rounded-md cursor-pointer view-btn" src="${gen.resultUrl}">
-                    <div class="flex-1">
-                        <a href="${gen.siteUrl}" target="_blank" class="font-medium text-primary hover:underline">View on site</a>
+                    <div class="flex-1 min-w-0">
+                        <a href="${gen.siteUrl}" target="_blank" class="font-medium text-primary hover:underline line-clamp-2" title="${gen.siteTitle || 'View on site'}">${gen.siteTitle || 'View on site'}</a>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${timestamp}</p>
                     </div>
                     <div class="flex items-center space-x-1 text-gray-500 dark:text-gray-400">
@@ -497,43 +497,43 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
 
-                // Attach event listeners
-                div.querySelector('.view-btn').onclick = () => {
-                    modal.style.display = "block";
-                    modalImg.src = gen.resultUrl;
-                };
+          // Attach event listeners
+          div.querySelector('.view-btn').onclick = () => {
+            modal.style.display = "block";
+            modalImg.src = gen.resultUrl;
+          };
 
-                div.querySelector('.delete-gen-btn').onclick = async () => {
-                    if (confirm(`Delete this generated image?`)) {
-                        await deleteGeneratedImage(gen.jobId, token);
-                    }
-                };
+          div.querySelector('.delete-gen-btn').onclick = async () => {
+            if (confirm(`Delete this generated image?`)) {
+              await deleteGeneratedImage(gen.jobId, token);
+            }
+          };
 
-                listDiv.appendChild(div);
-            });
-        } else {
-            listDiv.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">No generated images yet.</p>';
-        }
+          listDiv.appendChild(div);
+        });
+      } else {
+        listDiv.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">No generated images yet.</p>';
+      }
     } catch (e) {
-        console.error("Failed to load generated images:", e);
-        listDiv.innerHTML = '<p class="text-red-500">Failed to load generated images.</p>';
+      console.error("Failed to load generated images:", e);
+      listDiv.innerHTML = '<p class="text-red-500">Failed to load generated images.</p>';
     }
   }
 
   async function deleteGeneratedImage(jobId, token) {
-      try {
-          const res = await fetch(`${API_BASE_URL}/user/generations/${jobId}`, {
-              method: 'DELETE',
-              headers: { 'Authorization': `Bearer ${token}` }
-          });
+    try {
+      const res = await fetch(`${API_BASE_URL}/user/generations/${jobId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-          if (!res.ok) throw new Error("Failed to delete generated image");
+      if (!res.ok) throw new Error("Failed to delete generated image");
 
-          loadGeneratedImages(token); // Reload list
+      loadGeneratedImages(token); // Reload list
 
-      } catch (e) {
-          alert("Error deleting image: " + e.message);
-      }
+    } catch (e) {
+      alert("Error deleting image: " + e.message);
+    }
   }
 
 

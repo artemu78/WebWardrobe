@@ -11,6 +11,7 @@
         "selfieUrl.$": "$.selfieUrl",
         "selfieId.$": "$.selfieId",
         "siteUrl.$": "$.siteUrl",
+        "siteTitle.$": "$.siteTitle",
         "apiPayload": {
           "clothes_image_url.$": "$.itemUrl",
           "user_image_url.$": "$.selfieUrl",
@@ -30,7 +31,8 @@
           "itemUrl.$": "$.itemUrl",
           "selfieUrl.$": "$.selfieUrl",
           "selfieId.$": "$.selfieId",
-          "siteUrl.$": "$.siteUrl"
+          "siteUrl.$": "$.siteUrl",
+          "siteTitle.$": "$.siteTitle"
         }
       },
       "Retry": [
@@ -65,7 +67,10 @@
         "Payload": {
           "jobId.$": "$.jobId",
           "userId.$": "$.userId",
-          "resultUrl.$": "$.generationResult.Payload.resultUrl"
+          "resultUrl.$": "$.generationResult.Payload.resultUrl",
+          "itemUrl.$": "$.itemUrl",
+          "siteUrl.$": "$.siteUrl",
+          "siteTitle.$": "$.siteTitle"
         }
       },
       "Retry": [
