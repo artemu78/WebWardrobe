@@ -13,7 +13,7 @@ const translations: any = {
         step1Title: "1. Upload Your Selfie",
         step1Desc: "Take a quick photo or upload one from your gallery. Our AI creates a digital model of you.",
         step2Title: "2. Shop Anywhere",
-        step2Desc: "Browse your favorite stores. Right-click on any item you like to try it on.",
+        step2Desc: "Browse your favorite stores. Right-click on a product image you like and select your selfie to apply the virtual try-on.",
         step3Title: "3. Instant Try-On",
         step3Desc: "See yourself wearing the item instantly. Mix and match styles before you buy.",
         tariffsTitle: "Simple Pricing",
@@ -246,26 +246,47 @@ const Home: React.FC = () => {
             <section id="how-it-works" className="features">
                 <h2>{t('howItWorks')}</h2>
                 <div className="feature-grid">
-                    <div className="feature-card">
-                        <div className="feature-img">
-                            <img src="/images/step1_selfie.png" alt="Upload Selfie" />
+                    <div className="feature-card flip-card">
+                        <div className="flip-card-inner">
+                            <div className="flip-card-front">
+                                <div className="feature-img">
+                                    <img src="/images/step1_selfie.png" alt="Upload Selfie" />
+                                </div>
+                                <h3>{t('step1Title')}</h3>
+                                <p>{t('step1Desc')}</p>
+                            </div>
+                            <div className="flip-card-back">
+                                <img src="/images/Screenshot 2025-11-30 at 11.32.17.png" alt="Step 1 Details" />
+                            </div>
                         </div>
-                        <h3>{t('step1Title')}</h3>
-                        <p>{t('step1Desc')}</p>
                     </div>
-                    <div className="feature-card">
-                        <div className="feature-img">
-                            <img src="/images/step2_shop.png" alt="Shop Anywhere" />
+                    <div className="feature-card flip-card">
+                        <div className="flip-card-inner">
+                            <div className="flip-card-front">
+                                <div className="feature-img">
+                                    <img src="/images/step2_shop.png" alt="Shop Anywhere" />
+                                </div>
+                                <h3>{t('step2Title')}</h3>
+                                <p>{t('step2Desc')}</p>
+                            </div>
+                            <div className="flip-card-back">
+                                <img src="/images/Screenshot 2025-11-30 at 11.37.29.png" alt="Step 2 Details" />
+                            </div>
                         </div>
-                        <h3>{t('step2Title')}</h3>
-                        <p>{t('step2Desc')}</p>
                     </div>
-                    <div className="feature-card">
-                        <div className="feature-img">
-                            <img src="/images/step3_result.png" alt="Instant Try-On" />
+                    <div className="feature-card flip-card">
+                        <div className="flip-card-inner">
+                            <div className="flip-card-front">
+                                <div className="feature-img">
+                                    <img src="/images/step3_result.png" alt="Instant Try-On" />
+                                </div>
+                                <h3>{t('step3Title')}</h3>
+                                <p>{t('step3Desc')}</p>
+                            </div>
+                            <div className="flip-card-back">
+                                <img src="/images/Screenshot 2025-12-02 at 19.46.19.png" alt="Step 3 Details" />
+                            </div>
                         </div>
-                        <h3>{t('step3Title')}</h3>
-                        <p>{t('step3Desc')}</p>
                     </div>
                 </div>
             </section>
