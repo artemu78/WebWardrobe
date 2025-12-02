@@ -1,3 +1,10 @@
+// popup.js
+if (typeof Sentry !== 'undefined') {
+  Sentry.init({
+    dsn: "https://72cabbbdafe87f51a39927bec3d9e076@o4508982929588224.ingest.de.sentry.io/4508982935617616",
+  });
+}
+
 const API_BASE_URL = "https://nw2ghqgbe5.execute-api.us-east-1.amazonaws.com/prod";
 const SITE_BASE_URL = "https://web-wardrobe.netlify.app";
 

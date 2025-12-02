@@ -1,4 +1,16 @@
 // background.js
+try {
+  importScripts('lib/sentry.min.js');
+  Sentry.init({
+    dsn: "https://72cabbbdafe87f51a39927bec3d9e076@o4508982929588224.ingest.de.sentry.io/4508982935617616",
+    // The user provided these OAuth credentials, but they are typically used for Sentry API access, not error tracking.
+    // Client ID: "76dae42d7bfb511c86f5980f40b1a748d93d3e932428874e23e2aeb59487698f"
+    // Client Secret: "9b59d9c87a6e4914abf0a2ad53c2e43982042be7a4d70f318054abdcd5080c0c"
+  });
+} catch (e) {
+  console.error("Sentry initialization failed in background.js", e);
+}
+
 const API_BASE_URL = "https://nw2ghqgbe5.execute-api.us-east-1.amazonaws.com/prod";
 
 // Initialize
@@ -77,7 +89,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         // Inject content script dynamically
         chrome.scripting.executeScript({
           target: { tabId: tab.id },
-          files: ['content.js']
+          files: ['lib/sentry.min.js', 'content.js']
         }, () => {
           if (chrome.runtime.lastError) {
             console.error("Script injection failed: " + chrome.runtime.lastError.message);
