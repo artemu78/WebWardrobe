@@ -1,2 +1,7 @@
 [build.environment]
   NPM_VERSION = "9.8.1"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
