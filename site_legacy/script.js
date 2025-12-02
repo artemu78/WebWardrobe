@@ -32,7 +32,8 @@ const translations = {
         tariffStandardDesc: "For the fashion enthusiasts.",
         save30: "Save ~30%",
         anyWebsite: "Any Website",
-        legalText: ""
+        legalText: "",
+        howToInstall: "How to install"
     },
     ru: {
         getExtension: "Скачать расширение",
@@ -68,7 +69,8 @@ const translations = {
         tariffStandardDesc: "Для фанатов моды.",
         save30: "Экономия ~30%",
         anyWebsite: "Любого Сайта",
-        legalText: "Рева Артем Владимирович ИНН 575400352100"
+        legalText: "Рева Артем Владимирович ИНН 575400352100",
+        howToInstall: "Как установить"
     },
     de: {
         getExtension: "Erweiterung holen",
@@ -104,7 +106,8 @@ const translations = {
         tariffStandardDesc: "Für Modebegeisterte.",
         save30: "~30% sparen",
         anyWebsite: "Jeder Website",
-        legalText: ""
+        legalText: "",
+        howToInstall: "Installationsanleitung"
     },
     es: {
         getExtension: "Obtener extensión",
@@ -140,7 +143,8 @@ const translations = {
         tariffStandardDesc: "Para entusiastas de la moda.",
         save30: "Ahorra ~30%",
         anyWebsite: "Cualquier Sitio Web",
-        legalText: ""
+        legalText: "",
+        howToInstall: "Cómo instalar"
     }
 };
 
@@ -149,7 +153,7 @@ translations.en.transformationTitle = "See the Difference";
 
 document.addEventListener('DOMContentLoaded', () => {
     const langSelect = document.getElementById('language-select');
-    
+
     // 1. Check URL param
     const urlParams = new URLSearchParams(window.location.search);
     const urlLang = urlParams.get('lang');
@@ -172,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
     langSelect.addEventListener('change', (e) => {
         const lang = e.target.value;
         localStorage.setItem('webwardrobe_lang', lang);
-        
+
         // Update URL without reloading
         const newUrl = new URL(window.location);
         newUrl.searchParams.set('lang', lang);
@@ -199,21 +203,21 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('scroll', () => {
             const rect = section.getBoundingClientRect();
             const viewportHeight = window.innerHeight;
-            
+
             // Calculate progress
             // We want the animation to happen as the section scrolls through the viewport.
             // When the top of the section hits the top of the viewport (rect.top <= 0), we start.
             // The section is 300vh tall. The sticky content is 100vh.
             // So we have 200vh of scrollable distance where the content is pinned.
-            
+
             const scrollableDistance = section.offsetHeight - viewportHeight;
             const scrolled = -rect.top;
-            
+
             let progress = scrolled / scrollableDistance;
-            
+
             // Clamp progress between 0 and 1
             progress = Math.max(0, Math.min(1, progress));
-            
+
             const percentage = 100 - (progress * 100);
             afterImage.style.clipPath = `inset(0 ${percentage}% 0 0)`;
         });

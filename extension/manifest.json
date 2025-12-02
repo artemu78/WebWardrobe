@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "WebWardrobe Virtual Try-On",
-  "version": "2.11.2",
+  "version": "2.11.5",
   "description": "Try on clothes from any website using your own photos.",
   "permissions": [
     "contextMenus",
@@ -33,6 +33,5 @@
       "email",
       "profile"
     ]
-  },
-  "key": "MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDCjSEm0P3QPvmIocleyGAg6KxaML7Emi/KVZZxQD+MNB1xIh5gHaO2E1PepF58/SiUSk1PrwGyDYrRi+EVoU8FN49WBb7DPvqsMug1ghgCOmK15+gFqFv27DizA5ZDIAhYD5OGo8+ATg8Yd1LPvNs2ufdJUVKz7OgYTerbxLpZDJXUYNFUxUr+mlBswNtKza31ZZaraZrTxQmMhJQZ4iVX96ECNjuxqBAxEjuZJzxIkv3MtzZ7BTue+lD7PzsjrPrmQMMCiG3U/SECXSd8WEqguuOrmoPBxWmNPIFVkUaXwug01RG7XjZVTUW1OizJ6uwBg8kFiFIaNlFD8vbU+wQTAgMBAAECggEAHg1l5xSWeHIZ4rC3JfSG4N6ALShld4InyrYA2LqndlVgjObL0WYSsV/37ybtz5ndiFaX7ayncuUjoe3dFZXG2pP0CMI3bvqOB0aP1yAi7EkvkVDi5ujUV+aydXii3/iVQWEalUw9k+C69TkNajiOljwQxlsRDukUCxkSI+OWM4X4ZnxRB8rtcY/JQIVF81UIt3w6MubbdcAC5b2N3A99sbkqEcZIN4XdfdNtZfeI9MG3TfNamMNknq5WjyZ772uulLyqkjRYzhAS8WAJ6ODTP7amNg8THTtL287lzXm5x11q9zT8tWJAOnVN7MIEtf8GcBZFOoI8/JLBFapxRMRiwQKBgQD1dMsMe0n7qXZcYSfaQ6NdKcbPNgVJM20gt3bJbO8YRYrn0mPKCZu6kslPjJKMTeIMZomdOGDDD+4IWDu3ipe2vCw5chlvmgTi/3TDwY8tp9CWtfjrhOvRhHkhRRqThl4TBeRq8TBEYkDh1VdqfPrJGi69Y5PpyCiofQuzBDo0UwKBgQDK6IzkfoxVzncKbgeGTduBWOdtEH4XK85HCQI4VTE25HSK4va+oxo0UnyuKQGAmGs5JhUbOTXdkZCvHY6LLI7WOmjqJCQdsMaGxyqCe0hBqe6DT2U0CkOis/eQ9hZ/p+BA7ltBApJyvzurHv4e/gJYW+c5w1KasskMvcLda5X5QQKBgBObT7jghElhAP5iGF/b9Um005ertgJh5D6vyQJP/E1RCMZ5zNTPravam9AJ547jjcH10tpHLZuHQzlRavu/S10ibNnt3lBG2ksTos0cQgagmA3h3U9a38dtsItSzMup+QvF9bgBKhzcSFiBxSjRcOrtd3xTXvZWscC7tFqJZOjXAoGAUvWvnUBsSiznGNmRtASjKYha3omus/SSGxMA2F1kiMfxKlPPhHQVI61SErbrSVOIC06ZtI64ikWYvTA9doOaRtaMzKZIKed70+EcbUrQaSB8Ry2v+A32R1CDeL5Uxo6xrnqFztepXsb3M2ixh6Rc+xlgOYq1fFB6yP3Q7UyufcECgYBsKbpz/QLbuDCM2LBBwlKTY+4nx/6BB0NUtDVeENnSh0JUbIlpP9snOqWC3aTwg8zrN+J/53K7/AawFtt8vWaMyl8402MPD479HKEmsheDKTmJr6WEspbbKJEZlpr7Xch8q4/l40ilhMr1n4KWvXfWatyy4I4+VOcdosKcNwCHmA=="
+  }
 }

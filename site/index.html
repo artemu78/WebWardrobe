@@ -1,126 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebWardrobe - Virtual Try-On for Everyone</title>
-    <link rel="stylesheet" href="style.css">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebWardrobe - Installation Guide</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="images/favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#eff6ff',
+                100: '#dbeafe',
+                500: '#3b82f6',
+                600: '#2563eb',
+                700: '#1d4ed8',
+                900: '#1e3a8a',
+              }
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+
 </head>
-<body>
-    <header>
-        <nav>
-            <div class="logo-container" style="display: flex; align-items: center; gap: 10px;">
-                <img src="images/logo_48.png" alt="WebWardrobe Logo" style="height: 32px;">
-                <div class="logo">WebWardrobe</div>
-            </div>
-            <ul class="nav-links">
-                <li><a href="#how-it-works" data-i18n="howItWorks">How It Works</a></li>
-                <li><a href="#tariffs" data-i18n="pricing">Pricing</a></li>
-            </ul>
-            <div class="nav-actions" style="display: flex; align-items: center; gap: 15px;">
-                <select id="language-select" class="lang-select">
-                    <option value="en">EN</option>
-                    <option value="ru">RU</option>
-                    <option value="de">DE</option>
-                    <option value="es">ES</option>
-                </select>
-                <a href="#" class="btn-primary" data-i18n="getExtension">Get Extension</a>
-            </div>
-        </nav>
-    </header>
-
-    <section class="hero">
-        <div class="hero-content">
-            <h1 data-i18n="heroTitle">Try On Clothes From <span class="gradient-text" data-i18n="anyWebsite">Any Website</span></h1>
-            <p data-i18n="heroSubtitle">Experience the future of online shopping. Use your own photo to virtually try on outfits from any store instantly.</p>
-            <div class="hero-buttons">
-                <a href="#" class="btn-primary" data-i18n="addToChrome">Add to Chrome</a>
-                <a href="#how-it-works" class="btn-secondary" data-i18n="learnMore">Learn More</a>
-            </div>
-        </div>
-        <div class="hero-image">
-            <img src="images/hero_bg.png" alt="Virtual Try-On Experience">
-        </div>
-    </section>
-
-    <section id="how-it-works" class="features">
-        <h2 data-i18n="howItWorks">How It Works</h2>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div class="feature-img">
-                    <img src="images/step1_selfie.png" alt="Upload Selfie">
-                </div>
-                <h3 data-i18n="step1Title">1. Upload Your Selfie</h3>
-                <p data-i18n="step1Desc">Take a quick photo or upload one from your gallery. Our AI creates a digital model of you.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-img">
-                    <img src="images/step2_shop.png" alt="Shop Anywhere">
-                </div>
-                <h3 data-i18n="step2Title">2. Shop Anywhere</h3>
-                <p data-i18n="step2Desc">Browse your favorite stores. Right-click on any item you like to try it on.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-img">
-                    <img src="images/step3_result.png" alt="Instant Try-On">
-                </div>
-                <h3 data-i18n="step3Title">3. Instant Try-On</h3>
-                <p data-i18n="step3Desc">See yourself wearing the item instantly. Mix and match styles before you buy.</p>
-            </div>
-        </div>
-    </section>
-
-
-    <section id="transformation" class="transformation-section">
-        <div class="sticky-content">
-            <h2 data-i18n="transformationTitle">See the Difference</h2>
-            <div class="image-comparison">
-                <img src="images/example_before.png" class="img-before" alt="Before Try-On">
-                <img src="images/example_after.png" class="img-after" alt="After Try-On">
-            </div>
-        </div>
-    </section>
-
-    <section id="tariffs" class="tariffs">
-        <h2 data-i18n="tariffsTitle">Simple Pricing</h2>
-        <div class="tariff-grid">
-            <div class="tariff-card">
-                <h3 data-i18n="tariffOnTheGo">On the go</h3>
-                <div class="price"><span data-i18n="priceOnTheGo">0.4$</span> <span data-i18n="perCredit">/ credit</span></div>
-                <p data-i18n="tariffOnTheGoDesc">Top up whatever you like. Perfect for occasional use.</p>
-                <ul class="tariff-features">
-                    <li data-i18n="payAsYouGo">Pay as you go</li>
-                    <li data-i18n="noSubscription">No subscription</li>
-                </ul>
-            </div>
-            <div class="tariff-card popular">
-                <div class="badge" data-i18n="popular">Popular</div>
-                <h3 data-i18n="tariffStarter">Starter</h3>
-                <div class="price"><span data-i18n="priceStarter">10$</span> <span data-i18n="perMonth">/ month</span></div>
-                <p data-i18n="tariffStarterDesc">Great for regular shoppers.</p>
-                <ul class="tariff-features">
-                    <li>25 <span data-i18n="credits">credits</span></li>
-                    <li data-i18n="save20">Save ~20%</li>
-                </ul>
-            </div>
-            <div class="tariff-card">
-                <h3 data-i18n="tariffStandard">Standard</h3>
-                <div class="price"><span data-i18n="priceStandard">20$</span> <span data-i18n="perMonth">/ month</span></div>
-                <p data-i18n="tariffStandardDesc">For the fashion enthusiasts.</p>
-                <ul class="tariff-features">
-                    <li>60 <span data-i18n="credits">credits</span></li>
-                    <li data-i18n="save30">Save ~30%</li>
-                </ul>
-            </div>
-        </div>
-    </section>
-
-    <footer>
-        <p>&copy; 2025 WebWardrobe. All rights reserved.</p>
-        <p style="font-size: 12px; color: #444; margin-top: 10px;" data-i18n="legalText"></p>
-    </footer>
-    <script src="script.js"></script>
-</body>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>

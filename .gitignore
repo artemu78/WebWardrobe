@@ -32,3 +32,4 @@ extension/archives
 extension/.DS_Store
 extension/web-wardrobe-chrome*
 
+node_modules/

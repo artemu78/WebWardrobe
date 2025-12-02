@@ -1,0 +1,16 @@
+{
+    "name": "webwardrobe-monorepo",
+    "version": "1.0.0",
+    "private": true,
+    "workspaces": [
+        "site",
+        "extension"
+    ],
+    "scripts": {
+        "test": "./test.sh",
+        "test:backend": "python3 -m unittest discover -s backend/tests",
+        "test:extension": "npm run test -w extension",
+        "build:site": "npm run build -w site",
+        "dev:site": "npm run dev -w site"
+    }
+}
