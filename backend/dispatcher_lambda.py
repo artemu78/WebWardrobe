@@ -60,10 +60,13 @@ def get_user_info_from_token(event):
     if auth_header:
         token = auth_header.replace('Bearer ', '').strip()
         try:
-            url = f"https://www.googleapis.com/oauth2/v3/tokeninfo?access_token={token}"
-            with urllib.request.urlopen(url) as response:
+            # Use userinfo endpoint instead of tokeninfo for better profile data
+            url = "https://www.googleapis.com/oauth2/v3/userinfo"
+            req = urllib.request.Request(url, headers={'Authorization': f"Bearer {token}"})
+            with urllib.request.urlopen(req) as response:
                 data = json.loads(response.read().decode())
-                # tokeninfo may contain 'email' and 'name'
+                print(f"User info data keys: {list(data.keys())}")
+                
                 user_info = {}
                 if 'email' in data:
                     user_info['email'] = data['email']
@@ -482,7 +485,54 @@ def profile_handler(event, context):
         # GET /user/images
         elif method == 'GET':
             response = user_table.get_item(Key={'userId': user_id})
-            item = response.get('Item', {})
+            item = response.get('Item')
+            
+            # Check if we need to fetch user info (if profile missing or missing fields)
+            user_info = None
+            if not item or ('email' not in item or 'name' not in item):
+                user_info = get_user_info_from_token(event)
+
+            if not item:
+                # Create new profile
+                item = {
+                    'userId': user_id,
+                    'credits': 5,
+                    'images': []
+                }
+                if user_info:
+                    if 'email' in user_info:
+                        item['email'] = user_info['email']
+                    if 'name' in user_info:
+                        item['name'] = user_info['name']
+                
+                user_table.put_item(Item=item)
+            
+            elif user_info:
+                # Update existing profile if email/name missing and available in token
+                update_expr = []
+                expr_attrs = {}
+                expr_names = {}
+                
+                if 'email' in user_info and 'email' not in item:
+                    update_expr.append('#e = :e')
+                    expr_attrs[':e'] = user_info['email']
+                    expr_names['#e'] = 'email'
+                    item['email'] = user_info['email']
+                
+                if 'name' in user_info and 'name' not in item:
+                    update_expr.append('#n = :n')
+                    expr_attrs[':n'] = user_info['name']
+                    expr_names['#n'] = 'name'
+                    item['name'] = user_info['name']
+                
+                if update_expr:
+                    user_table.update_item(
+                        Key={'userId': user_id},
+                        UpdateExpression='SET ' + ', '.join(update_expr),
+                        ExpressionAttributeNames=expr_names,
+                        ExpressionAttributeValues=expr_attrs
+                    )
+
             images = item.get('images', [])
             # Return credits as well, default to 5 if not set
             credits = int(item.get('credits', 5))
