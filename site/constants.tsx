@@ -11,6 +11,7 @@ import {
 import { InstructionStep } from "./types";
 
 export const ZIP_FILE_NAME = "web-wardrobe-chrome-extension-v2.11.2.zip";
+export const API_BASE_URL = "https://nw2ghqgbe5.execute-api.us-east-1.amazonaws.com/prod";
 
 export const STEPS: InstructionStep[] = [
   {

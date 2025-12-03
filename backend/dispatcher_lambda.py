@@ -72,6 +72,8 @@ def get_user_info_from_token(event):
                     user_info['email'] = data['email']
                 if 'name' in data:
                     user_info['name'] = data['name']
+                if 'picture' in data:
+                    user_info['picture'] = data['picture']
                 return user_info if user_info else None
         except Exception as e:
             print(f"User info extraction failed: {e}")
@@ -140,6 +142,8 @@ def dispatcher_handler(event, context):
                     new_profile['email'] = user_info['email']
                 if 'name' in user_info:
                     new_profile['name'] = user_info['name']
+                if 'picture' in user_info:
+                    new_profile['picture'] = user_info['picture']
             # Store the new profile in DynamoDB
             user_table.put_item(Item=new_profile)
             user_profile = new_profile
@@ -156,6 +160,9 @@ def dispatcher_handler(event, context):
                 if 'name' in user_info and 'name' not in user_profile:
                     update_expr.append('#n = :n')
                     expr_attrs[':n'] = user_info['name']
+                if 'picture' in user_info and 'picture' not in user_profile:
+                    update_expr.append('#p = :p')
+                    expr_attrs[':p'] = user_info['picture']
                 if update_expr:
                     update_expression = 'SET ' + ', '.join(update_expr)
                     expression_attribute_names = {}
@@ -163,6 +170,8 @@ def dispatcher_handler(event, context):
                         expression_attribute_names['#e'] = 'email'
                     if '#n' in update_expression:
                         expression_attribute_names['#n'] = 'name'
+                    if '#p' in update_expression:
+                        expression_attribute_names['#p'] = 'picture'
                     user_table.update_item(
                         Key={'userId': user_id},
                         UpdateExpression=update_expression,
@@ -504,6 +513,8 @@ def profile_handler(event, context):
                         item['email'] = user_info['email']
                     if 'name' in user_info:
                         item['name'] = user_info['name']
+                    if 'picture' in user_info:
+                        item['picture'] = user_info['picture']
                 
                 user_table.put_item(Item=item)
             
@@ -525,6 +536,12 @@ def profile_handler(event, context):
                     expr_names['#n'] = 'name'
                     item['name'] = user_info['name']
                 
+                if 'picture' in user_info and 'picture' not in item:
+                    update_expr.append('#p = :p')
+                    expr_attrs[':p'] = user_info['picture']
+                    expr_names['#p'] = 'picture'
+                    item['picture'] = user_info['picture']
+                
                 if update_expr:
                     user_table.update_item(
                         Key={'userId': user_id},
@@ -540,7 +557,9 @@ def profile_handler(event, context):
                 'statusCode': 200,
                 'body': json.dumps({
                     'images': images,
-                    'credits': credits
+                    'credits': credits,
+                    'name': item.get('name'),
+                    'picture': item.get('picture')
                 }, default=str) # handle Decimal if any
             }
 
