@@ -23,9 +23,17 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 // Listen for refresh requests from popup
+// Listen for refresh requests from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "refreshContextMenu") {
     refreshContextMenu();
+  } else if (request.type === "PAYMENT_SUCCESS") {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL('logo.jpg'),
+      title: 'Payment Successful',
+      message: 'Your credits have been topped up!'
+    });
   }
 });
 

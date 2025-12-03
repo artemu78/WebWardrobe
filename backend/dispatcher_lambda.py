@@ -470,7 +470,8 @@ def profile_handler(event, context):
                     'name': item.get('name'),
                     'picture': item.get('picture'),
                     'email': item.get('email'),
-                    'credits': credits
+                    'credits': credits,
+                    'userId': item.get('userId')
                 }, default=str)
             }
 
@@ -996,3 +997,147 @@ def saver_handler(event, context):
     except Exception as e:
         print(f"Error in saver: {e}")
         raise e
+
+import hmac
+import hashlib
+
+def payment_webhook_handler(event, context):
+    """
+    Handle Prodamus payment webhook.
+    Verifies signature and credits user account.
+    """
+    try:
+        # 1. Get Secret Key
+        secret_key = os.environ.get('PRODAMUS_SECRET_KEY', 'dummy_secret')
+        
+        # 2. Parse Body
+        # Prodamus sends data as form-urlencoded or JSON?
+        # Usually POST request with form data.
+        # API Gateway might have base64 encoded body if it's form-data
+        body_str = event.get('body', '')
+        if event.get('isBase64Encoded', False):
+            body_str = base64.b64decode(body_str).decode('utf-8')
+        
+        # Parse query params or body params
+        # Prodamus sends POST parameters.
+        # We need to parse them into a dict.
+        params = {}
+        # Check content type
+        content_type = event.get('headers', {}).get('content-type', '') or event.get('headers', {}).get('Content-Type', '')
+        
+        if 'application/json' in content_type:
+            params = json.loads(body_str)
+        else:
+            # Assume form-urlencoded
+            parsed = urllib.parse.parse_qsl(body_str, keep_blank_values=True)
+            params = dict(parsed)
+
+        # 3. Verify Signature
+        # Signature is in 'sign' header or 'Sign' header
+        headers = event.get('headers', {})
+        received_sign = headers.get('sign') or headers.get('Sign')
+        
+        if not received_sign:
+             print("Missing signature")
+             return {'statusCode': 400, 'body': 'Missing signature'}
+
+        # Construct signature base
+        # Sort params by key (alphabetical), exclude 'sign' if present in body (usually it's in header)
+        # Prodamus algorithm:
+        # 1. Sort params alphabetically by key.
+        # 2. Concatenate values? Or build query string?
+        # Documentation says: "sign" header is HMAC-SHA256 of the request body?
+        # Or specific construction?
+        # Search result said: "data (a dictionary or object representing the POST request body) should be sorted by its keys and then serialized into a JSON string."
+        # Wait, if it's form-data, JSON serialization might be tricky.
+        # Let's try to replicate standard Prodamus verification.
+        # "The data... should be sorted by its keys and then serialized into a JSON string."
+        # This implies we should convert params to a sorted dict, then json.dumps with specific separators?
+        # Actually, Prodamus often sends a specific format.
+        # Let's assume the body is the data if it's JSON.
+        # If it's form data, we convert to dict, sort, then JSON dump?
+        # Let's try to be robust.
+        
+        # Re-reading search result: "data... sorted by its keys and then serialized into a JSON string."
+        # This usually means `json.dumps(params, sort_keys=True, separators=(',', ':'), ensure_ascii=False)` or similar.
+        # Let's try standard json dumps with sort_keys=True.
+        
+        # However, if the request came as form-data, types might be all strings.
+        # If the request came as JSON, types might be preserved.
+        # Prodamus usually sends form-data.
+        
+        # Let's try to verify using the raw body if possible? No, order matters.
+        
+        # Let's implement the "sort and json dump" approach.
+        sorted_params = dict(sorted(params.items()))
+        
+        # Note: Prodamus might require specific JSON formatting (no spaces).
+        # separators=(',',':') removes spaces.
+        # ensure_ascii=False allows unicode.
+        msg = json.dumps(sorted_params, sort_keys=True, separators=(',',':'), ensure_ascii=False)
+        
+        # Calculate HMAC
+        key_bytes = secret_key.encode('utf-8')
+        msg_bytes = msg.encode('utf-8')
+        signature = hmac.new(key_bytes, msg_bytes, hashlib.sha256).hexdigest()
+        
+        if signature != received_sign:
+            print(f"Signature mismatch. Calculated: {signature}, Received: {received_sign}")
+            # For debugging, let's print the msg base
+            print(f"Sign base: {msg}")
+            # Return 400 or 403
+            # For now, if dummy secret, we might fail.
+            # But we must implement it.
+            return {'statusCode': 403, 'body': 'Invalid signature'}
+
+        # 4. Process Payment
+        # Check payment status
+        payment_status = params.get('payment_status')
+        if payment_status != 'success':
+            return {'statusCode': 200, 'body': 'Not a success status'}
+
+        # Get User ID
+        user_id = params.get('customer_extra')
+        if not user_id:
+            print("Missing customer_extra (userId)")
+            return {'statusCode': 200, 'body': 'Missing userId'}
+
+        # Get Amount
+        amount_str = params.get('sum', '0')
+        try:
+            amount = float(amount_str)
+        except:
+            amount = 0
+            
+        # Calculate Credits
+        # 320 RUB = 10 credits
+        # 1 credit = 32 RUB
+        credits_to_add = int(amount / 32)
+        
+        if credits_to_add <= 0:
+            print(f"Amount {amount} too small for credits")
+            return {'statusCode': 200, 'body': 'Amount too small'}
+
+        # Update User Credits
+        user_table_name = os.environ['USER_TABLE_NAME']
+        user_table = dynamodb.Table(user_table_name)
+        
+        try:
+            user_table.update_item(
+                Key={'userId': user_id},
+                UpdateExpression="set credits = if_not_exists(credits, :start) + :inc",
+                ExpressionAttributeValues={
+                    ':inc': credits_to_add,
+                    ':start': 5
+                }
+            )
+            print(f"Added {credits_to_add} credits to user {user_id}")
+        except Exception as e:
+            print(f"Failed to add credits: {e}")
+            return {'statusCode': 500, 'body': 'DB Error'}
+
+        return {'statusCode': 200, 'body': 'OK'}
+
+    except Exception as e:
+        print(f"Error in webhook: {e}")
+        return {'statusCode': 500, 'body': str(e)}

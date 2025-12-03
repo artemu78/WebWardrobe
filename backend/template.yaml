@@ -17,6 +17,11 @@ Parameters:
     Description: "URL for the Nano-Banana Service"
     Default: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent"
 
+  ProdamusSecretKey:
+    Type: String
+    Description: "Secret Key for Prodamus Payment Webhook"
+    NoEcho: true
+
 Resources:
   # -------------------------------------------------------------------------
   # DynamoDB Tables
@@ -80,6 +85,7 @@ Resources:
         AllowHeaders:
           - Content-Type
           - Authorization
+          - Sign
 
   # -------------------------------------------------------------------------
   # EventBridge Connection (Required for Step Functions HTTP Task)
@@ -259,6 +265,30 @@ Resources:
           USER_GENERATIONS_TABLE_NAME: !Ref TryOnUserGenerationsTable
           BUCKET_NAME: !Ref TryOnBucket
           USER_TABLE_NAME: !Ref TryOnUserProfilesTable
+
+  # -------------------------------------------------------------------------
+  # Payment Webhook Lambda
+  # -------------------------------------------------------------------------
+  PaymentWebhookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: dispatcher_lambda.payment_webhook_handler
+      Runtime: python3.9
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TryOnUserProfilesTable
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Ref TryOnUserProfilesTable
+          PRODAMUS_SECRET_KEY: !Ref ProdamusSecretKey
+      Events:
+        WebhookTrigger:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TryOnApi
+            Path: /payment/webhook
+            Method: POST
 
   # -------------------------------------------------------------------------
   # S3 Bucket

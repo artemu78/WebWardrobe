@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Tariffs } from '../components/Tariffs';
 import '../styles/Home.css';
+import { API_BASE_URL } from '../constants';
+
+interface User {
+    name: string;
+    picture: string;
+    email?: string;
+    userId?: string;
+}
 
 const translations: any = {
     en: {
@@ -163,6 +171,30 @@ const translations: any = {
 
 const Home: React.FC = () => {
     const [lang, setLang] = useState('en');
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        const token = localStorage.getItem('google_access_token');
+        if (token) {
+            fetch(`${API_BASE_URL}/user/profile`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.name) {
+                    setUser({ 
+                        name: data.name, 
+                        picture: data.picture,
+                        email: data.email,
+                        userId: data.userId
+                    });
+                }
+            })
+            .catch(err => console.error('Failed to fetch profile:', err));
+        }
+    }, []);
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -184,6 +216,16 @@ const Home: React.FC = () => {
     const tHtml = (key: string) => {
         return { __html: translations[lang]?.[key] || key };
     };
+
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('payment') === 'success') {
+            window.postMessage({ type: "PAYMENT_SUCCESS" }, "*");
+            // Optional: Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            alert("Payment successful! Your credits have been updated.");
+        }
+    }, []);
 
     useEffect(() => {
         const section = document.querySelector('.transformation-section') as HTMLElement;
@@ -279,7 +321,7 @@ const Home: React.FC = () => {
                 </div>
             </section>
 
-            <Tariffs t={t} />
+            <Tariffs t={t} user={user} />
 
             <footer>
                 <p>&copy; 2025 WebWardrobe. All rights reserved.</p>

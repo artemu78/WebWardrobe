@@ -1,13 +1,89 @@
 import React from 'react';
 
-interface TariffsProps {
-    t: (key: string) => string;
+interface User {
+    name: string;
+    picture: string;
+    // We might need userId here, but Home.tsx User interface doesn't have it.
+    // However, the backend needs userId.
+    // The Home.tsx fetches user profile but only stores name and picture in state.
+    // We need to update Home.tsx to store userId as well?
+    // Or we can get it from the token?
+    // Actually, Home.tsx doesn't seem to have userId in the User interface.
+    // Let's check Home.tsx again.
 }
 
-export const Tariffs: React.FC<TariffsProps> = ({ t }) => {
+interface TariffsProps {
+    t: (key: string) => string;
+    user: any | null; // Using any to avoid type conflict if I don't update Home.tsx interface immediately, but better to update Home.tsx first.
+}
+
+export const Tariffs: React.FC<TariffsProps> = ({ t, user }) => {
     const handlePayment = (tariffName: string) => {
-        console.log(`Processing payment for: ${tariffName}`);
-        // Stub for payment processing
+        if (!user) {
+            // Redirect to login if not logged in
+            alert("Please sign in to purchase credits.");
+            return;
+        }
+
+        // We need userId. The user object in Home.tsx comes from /user/profile.
+        // Let's assume we can get userId from the token or we need to update Home.tsx to store it.
+        // For now, let's try to get it from localStorage token if not in user object, 
+        // but decoding token on client side is messy without a lib.
+        // Better to update Home.tsx to include userId in the user state.
+        
+        // Placeholder for userId until Home.tsx is updated
+        const userId = user.userId || "unknown_user"; 
+
+        let price = 0;
+        let credits = 0;
+        let name = "none";
+        let sku = "none";
+
+        switch (tariffName) {
+            case 'On the go':
+                price = 320; // 10 credits
+                credits = 10;
+                name = `WebWardrobe: ${credits} Credits`;
+                sku = "on_the_go";
+                break;
+            case 'Starter':
+                price = 800; // 25 credits
+                credits = 25;
+                name = `WebWardrobe: ${credits} Credits`;
+                sku = "starter";
+                break;
+            case 'Standard':
+                price = 1600; // 60 credits
+                credits = 60;
+                name = `WebWardrobe: ${credits} Credits`;
+                sku = "standard";
+                break;
+            default:
+                return;
+        }
+
+        const paymentUrl = "https://web-wardrobe.payform.ru/";
+        const products = [
+            {
+                name: name,
+                price: price,
+                quantity: 1,
+                tax: "none",
+                type: "service",
+                sku: sku
+            }
+        ];
+        const params = new URLSearchParams();
+        params.append('do', 'pay');
+        params.append('products', JSON.stringify(products));
+        params.append('customer_extra', userId);
+        params.append('urlSuccess', window.location.origin + "?payment=success");
+        
+        if (user.email) {
+            params.append('customer_email', user.email);
+        }
+
+        window.location.href = `${paymentUrl}?${params.toString()}`;
     };
 
     return (
