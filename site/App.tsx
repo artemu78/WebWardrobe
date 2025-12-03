@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import InstallationGuide from './pages/InstallationGuide';
+import { Layout } from './components/Layout';
 
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import LoginCallback from './pages/LoginCallback';
@@ -12,12 +13,14 @@ const App: React.FC = () => {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <Router>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/install" element={<InstallationGuide />} />
-          <Route path="/login_callback" element={<LoginCallback />} />
-          <Route path="/login_callback/*" element={<LoginCallback />} />
-        </Routes>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/install" element={<InstallationGuide />} />
+            <Route path="/login_callback" element={<LoginCallback />} />
+            <Route path="/login_callback/*" element={<LoginCallback />} />
+          </Routes>
+        </Layout>
       </Router>
     </GoogleOAuthProvider>
   );

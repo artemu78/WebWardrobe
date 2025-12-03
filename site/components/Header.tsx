@@ -1,0 +1,151 @@
+import React, { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../constants';
+
+interface User {
+    name: string;
+    picture: string;
+}
+
+interface HeaderProps {
+    translations: any;
+    lang: string;
+    onLangChange: (lang: string) => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange }) => {
+    const [user, setUser] = useState<User | null>(null);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    const handleLogin = () => {
+        const clientId = "20534293634-a3r95j8cifmbgon1se9g7me9fbebu5aq.apps.googleusercontent.com";
+        const origin = window.location.origin.replace('localhost', '127.0.0.1');
+        const redirectUri = `${origin}/login_callback`;
+        const scope = "email profile openid";
+        const responseType = "token";
+        
+        const authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${encodeURIComponent(scope)}`;
+        
+        window.location.href = authUrl;
+    };
+
+    useEffect(() => {
+        const token = localStorage.getItem('google_access_token');
+        if (token) {
+            fetch(`${API_BASE_URL}/user/profile`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => {
+                if (res.ok) return res.json();
+                throw new Error('Failed to fetch user');
+            })
+            .then(data => {
+                if (data.name) {
+                    setUser({ name: data.name, picture: data.picture });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                localStorage.removeItem('google_access_token');
+            });
+        }
+    }, []);
+
+    const handleSignOut = () => {
+        localStorage.removeItem('google_access_token');
+        setUser(null);
+        setIsDropdownOpen(false);
+    };
+
+    const handleLangChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        onLangChange(e.target.value);
+    };
+
+    const t = (key: string) => {
+        return translations[lang]?.[key] || key;
+    };
+
+    return (
+        <header>
+            <nav>
+                <div className="logo-container" style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                    <img src="/images/logo_48.png" alt="WebWardrobe Logo" style={{height: '32px'}} />
+                    <div className="logo">WebWardrobe</div>
+                </div>
+                <ul className="nav-links">
+                    <li><a href="/#how-it-works">{t('howItWorks')}</a></li>
+                    <li><a href="/#tariffs">{t('pricing')}</a></li>
+                </ul>
+                <div className="nav-actions" style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
+                    <select id="language-select" className="lang-select" value={lang} onChange={handleLangChange}>
+                        <option value="en">EN</option>
+                        <option value="ru">RU</option>
+                        <option value="de">DE</option>
+                        <option value="es">ES</option>
+                    </select>
+                    <a href="#" className="btn-primary">{t('getExtension')}</a>
+                    {user ? (
+                        <div style={{position: 'relative'}}>
+                            <div 
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                className="btn-secondary"
+                                style={{
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '8px', 
+                                    cursor: 'pointer',
+                                    padding: '10px 20px',
+                                    border: '2px solid var(--primary-color)',
+                                    borderRadius: '30px',
+                                    background: 'transparent',
+                                    transition: 'background 0.2s',
+                                    fontWeight: 600
+                                }}
+                            >
+                                <span style={{fontSize: '14px', color: 'white'}}>{user.name}</span>
+                                {user.picture ? (
+                                    <img src={user.picture} alt="Avatar" style={{width: '24px', height: '24px', borderRadius: '50%'}} />
+                                ) : (
+                                    <div style={{width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#ccc'}}></div>
+                                )}
+                            </div>
+                            {isDropdownOpen && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    right: 0,
+                                    marginTop: '8px',
+                                    backgroundColor: 'white',
+                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                    borderRadius: '8px',
+                                    padding: '8px',
+                                    zIndex: 100,
+                                    minWidth: '120px'
+                                }}>
+                                    <button 
+                                        onClick={handleSignOut}
+                                        className="btn-primary"
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px 20px',
+                                            border: 'none',
+                                            borderRadius: '30px',
+                                            cursor: 'pointer',
+                                            fontSize: '14px',
+                                            fontWeight: 600
+                                        }}
+                                    >
+                                        Sign out
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <button onClick={handleLogin} className="btn-secondary" style={{border: 'none', cursor: 'pointer'}}>Sign in</button>
+                    )}
+                </div>
+            </nav>
+        </header>
+    );
+};

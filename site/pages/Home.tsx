@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Tariffs } from '../components/Tariffs';
-import { API_BASE_URL } from '../constants';
 import '../styles/Home.css';
-
-interface User {
-    name: string;
-    picture: string;
-}
 
 const translations: any = {
     en: {
@@ -169,20 +163,6 @@ const translations: any = {
 
 const Home: React.FC = () => {
     const [lang, setLang] = useState('en');
-    const [user, setUser] = useState<User | null>(null);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-    const handleLogin = () => {
-        const clientId = "20534293634-a3r95j8cifmbgon1se9g7me9fbebu5aq.apps.googleusercontent.com";
-        const origin = window.location.origin.replace('localhost', '127.0.0.1');
-        const redirectUri = `${origin}/login_callback`;
-        const scope = "email profile openid";
-        const responseType = "token";
-        
-        const authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${encodeURIComponent(scope)}`;
-        
-        window.location.href = authUrl;
-    };
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -195,45 +175,7 @@ const Home: React.FC = () => {
             currentLang = savedLang;
         }
         setLang(currentLang);
-
-        const token = localStorage.getItem('google_access_token');
-        if (token) {
-            fetch(`${API_BASE_URL}/user/profile`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(res => {
-                if (res.ok) return res.json();
-                throw new Error('Failed to fetch user');
-            })
-            .then(data => {
-                if (data.name) {
-                    setUser({ name: data.name, picture: data.picture });
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                // Token might be expired, clear it
-                localStorage.removeItem('google_access_token');
-            });
-        }
     }, []);
-
-    const handleSignOut = () => {
-        localStorage.removeItem('google_access_token');
-        setUser(null);
-        setIsDropdownOpen(false);
-    };
-
-    const handleLangChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newLang = e.target.value;
-        setLang(newLang);
-        localStorage.setItem('webwardrobe_lang', newLang);
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.set('lang', newLang);
-        window.history.pushState({}, '', newUrl.toString());
-    };
 
     const t = (key: string) => {
         return translations[lang]?.[key] || key;
@@ -265,84 +207,6 @@ const Home: React.FC = () => {
 
     return (
         <div className="home-page">
-            <header>
-                <nav>
-                    <div className="logo-container" style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                        <img src="/images/logo_48.png" alt="WebWardrobe Logo" style={{height: '32px'}} />
-                        <div className="logo">WebWardrobe</div>
-                    </div>
-                    <ul className="nav-links">
-                        <li><a href="#how-it-works">{t('howItWorks')}</a></li>
-                        <li><a href="#tariffs">{t('pricing')}</a></li>
-                    </ul>
-                    <div className="nav-actions" style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-                        <select id="language-select" className="lang-select" value={lang} onChange={handleLangChange}>
-                            <option value="en">EN</option>
-                            <option value="ru">RU</option>
-                            <option value="de">DE</option>
-                            <option value="es">ES</option>
-                        </select>
-                        <a href="#" className="btn-primary">{t('getExtension')}</a>
-                        {user ? (
-                            <div style={{position: 'relative', marginLeft: '10px'}}>
-                                <div 
-                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    style={{
-                                        display: 'flex', 
-                                        alignItems: 'center', 
-                                        gap: '8px', 
-                                        cursor: 'pointer',
-                                        padding: '4px 12px',
-                                        backgroundColor: '#f0f0f0',
-                                        borderRadius: '20px',
-                                        border: '1px solid #ddd'
-                                    }}
-                                >
-                                    <span style={{fontWeight: 500, fontSize: '14px', color: '#333'}}>{user.name}</span>
-                                    {user.picture ? (
-                                        <img src={user.picture} alt="Avatar" style={{width: '24px', height: '24px', borderRadius: '50%'}} />
-                                    ) : (
-                                        <div style={{width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#ccc'}}></div>
-                                    )}
-                                </div>
-                                {isDropdownOpen && (
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '100%',
-                                        right: 0,
-                                        marginTop: '8px',
-                                        backgroundColor: 'white',
-                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                        borderRadius: '8px',
-                                        padding: '8px',
-                                        zIndex: 100,
-                                        minWidth: '120px'
-                                    }}>
-                                        <button 
-                                            onClick={handleSignOut}
-                                            style={{
-                                                width: '100%',
-                                                textAlign: 'left',
-                                                padding: '8px',
-                                                background: 'none',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                                color: '#d32f2f',
-                                                fontSize: '14px'
-                                            }}
-                                        >
-                                            Sign out
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <button onClick={handleLogin} className="btn-secondary" style={{marginLeft: '10px'}}>Sign in</button>
-                        )}
-                    </div>
-                </nav>
-            </header>
-
             <section className="hero">
                 <div className="hero-content">
                     <h1 dangerouslySetInnerHTML={tHtml('heroTitle')}></h1>
