@@ -4,6 +4,7 @@ import { API_BASE_URL } from '../constants';
 interface User {
     name: string;
     picture: string;
+    email?: string;
 }
 
 interface HeaderProps {
@@ -42,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
             })
             .then(data => {
                 if (data.name) {
-                    setUser({ name: data.name, picture: data.picture });
+                    setUser({ name: data.name, picture: data.picture, email: data.email });
                 }
             })
             .catch(err => {
@@ -121,8 +122,20 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
                                     borderRadius: '8px',
                                     padding: '8px',
                                     zIndex: 100,
-                                    minWidth: '120px'
+                                    minWidth: '200px'
                                 }}>
+                                    {user.email && (
+                                        <div style={{
+                                            padding: '8px 12px', 
+                                            fontSize: '12px', 
+                                            color: '#666', 
+                                            borderBottom: '1px solid #eee', 
+                                            marginBottom: '8px',
+                                            wordBreak: 'break-all'
+                                        }}>
+                                            {user.email}
+                                        </div>
+                                    )}
                                     <button 
                                         onClick={handleSignOut}
                                         className="btn-primary"

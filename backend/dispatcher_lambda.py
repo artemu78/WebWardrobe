@@ -449,7 +449,7 @@ def profile_handler(event, context):
                     expr_names['#p'] = 'picture'
                     item['picture'] = user_info['picture']
                 
-                if 'email' in user_info and 'email' not in item:
+                if 'email' in user_info:
                     update_expr.append('#e = :e')
                     expr_attrs[':e'] = user_info['email']
                     expr_names['#e'] = 'email'
