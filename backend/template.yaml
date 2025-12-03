@@ -186,6 +186,12 @@ Resources:
             ApiId: !Ref TryOnApi
             Path: /user/generations/{jobId}
             Method: DELETE
+        GetProfile:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TryOnApi
+            Path: /user/profile
+            Method: GET
 
   # -------------------------------------------------------------------------
   # Status Lambda (Polling)

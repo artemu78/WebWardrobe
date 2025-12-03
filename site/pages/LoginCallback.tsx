@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../constants';
 
 const LoginCallback: React.FC = () => {
     const navigate = useNavigate();
+    const [status, setStatus] = useState('Processing login...');
 
     useEffect(() => {
         const handleLogin = async () => {
@@ -15,13 +16,20 @@ const LoginCallback: React.FC = () => {
                 if (accessToken) {
                     localStorage.setItem('google_access_token', accessToken);
                     
-                    // Trigger backend to save user info
+                    setStatus('Syncing profile...');
+                    
+                    // Trigger backend to save user info and wait for response
                     try {
-                        await fetch(`${API_BASE_URL}/user/images`, {
+                        const response = await fetch(`${API_BASE_URL}/user/profile`, {
                             headers: {
                                 'Authorization': `Bearer ${accessToken}`
                             }
                         });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('Profile synced:', data.name);
+                        }
                     } catch (e) {
                         console.error("Failed to sync user profile", e);
                     }
@@ -52,7 +60,7 @@ const LoginCallback: React.FC = () => {
 
     return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-            Processing login...
+            {status}
         </div>
     );
 };

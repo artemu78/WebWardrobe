@@ -198,7 +198,7 @@ const Home: React.FC = () => {
 
         const token = localStorage.getItem('google_access_token');
         if (token) {
-            fetch(`${API_BASE_URL}/user/images`, {
+            fetch(`${API_BASE_URL}/user/profile`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -214,6 +214,8 @@ const Home: React.FC = () => {
             })
             .catch(err => {
                 console.error(err);
+                // Token might be expired, clear it
+                localStorage.removeItem('google_access_token');
             });
         }
     }, []);

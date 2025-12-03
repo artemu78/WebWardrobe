@@ -405,6 +405,75 @@ def profile_handler(event, context):
                 print(f"Error deleting generation: {e}")
                 return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
 
+        # GET /user/profile - Returns user profile info (name, picture, email, credits)
+        elif method == 'GET' and path.endswith('/profile'):
+            response = user_table.get_item(Key={'userId': user_id})
+            item = response.get('Item')
+            
+            # Always fetch fresh user info from Google token
+            user_info = get_user_info_from_token(event)
+
+            if not item:
+                # Create new profile with Google user info
+                item = {
+                    'userId': user_id,
+                    'credits': 5,
+                    'images': []
+                }
+                if user_info:
+                    if 'email' in user_info:
+                        item['email'] = user_info['email']
+                    if 'name' in user_info:
+                        item['name'] = user_info['name']
+                    if 'picture' in user_info:
+                        item['picture'] = user_info['picture']
+                
+                user_table.put_item(Item=item)
+            
+            elif user_info:
+                # Update existing profile with any missing fields from Google
+                update_expr = []
+                expr_attrs = {}
+                expr_names = {}
+                
+                # Always update name and picture from Google (they might change)
+                if 'name' in user_info:
+                    update_expr.append('#n = :n')
+                    expr_attrs[':n'] = user_info['name']
+                    expr_names['#n'] = 'name'
+                    item['name'] = user_info['name']
+                
+                if 'picture' in user_info:
+                    update_expr.append('#p = :p')
+                    expr_attrs[':p'] = user_info['picture']
+                    expr_names['#p'] = 'picture'
+                    item['picture'] = user_info['picture']
+                
+                if 'email' in user_info and 'email' not in item:
+                    update_expr.append('#e = :e')
+                    expr_attrs[':e'] = user_info['email']
+                    expr_names['#e'] = 'email'
+                    item['email'] = user_info['email']
+                
+                if update_expr:
+                    user_table.update_item(
+                        Key={'userId': user_id},
+                        UpdateExpression='SET ' + ', '.join(update_expr),
+                        ExpressionAttributeNames=expr_names,
+                        ExpressionAttributeValues=expr_attrs
+                    )
+
+            credits = int(item.get('credits', 5))
+            return {
+                'statusCode': 200,
+                'body': json.dumps({
+                    'name': item.get('name'),
+                    'picture': item.get('picture'),
+                    'email': item.get('email'),
+                    'credits': credits
+                }, default=str)
+            }
+
         # POST /user/images/upload-url
         elif method == 'POST' and 'upload-url' in path:
             body = json.loads(event.get('body', '{}'))
