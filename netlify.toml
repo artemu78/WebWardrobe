@@ -1,7 +1,14 @@
 [build.environment]
   NPM_VERSION = "9.8.1"
 
+# Prevent redirect for login callback route
+[[redirects]]
+  from = "/login_callback"
+  to = "/login_callback"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+  

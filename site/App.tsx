@@ -16,6 +16,7 @@ const App: React.FC = () => {
           <Route path="/" element={<Home />} />
           <Route path="/install" element={<InstallationGuide />} />
           <Route path="/login_callback" element={<LoginCallback />} />
+          <Route path="/login_callback/*" element={<LoginCallback />} />
         </Routes>
       </Router>
     </GoogleOAuthProvider>
