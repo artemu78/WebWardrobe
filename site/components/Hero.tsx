@@ -3,6 +3,8 @@ import { ArrowDown, PackageOpen } from "lucide-react";
 import { ZIP_FILE_NAME } from "../constants";
 
 export const Hero: React.FC<{ onStart: () => void }> = ({ onStart }) => {
+  const version = ZIP_FILE_NAME.split("-v")[1]?.replace(".zip", "");
+
   return (
     <div className="bg-gradient-to-br from-gray-900 to-brand-900 text-white pt-24 pb-20 px-6">
       <div className="max-w-4xl mx-auto text-center">
@@ -11,7 +13,7 @@ export const Hero: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
           </span>
-          v2.11.2 Released
+          v{version} Released
         </div>
 
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
