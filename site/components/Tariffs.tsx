@@ -1,0 +1,72 @@
+import React from 'react';
+
+interface TariffsProps {
+    t: (key: string) => string;
+}
+
+export const Tariffs: React.FC<TariffsProps> = ({ t }) => {
+    const handlePayment = (tariffName: string) => {
+        console.log(`Processing payment for: ${tariffName}`);
+        // Stub for payment processing
+    };
+
+    return (
+        <section id="tariffs" className="tariffs">
+            <h2>{t('tariffsTitle')}</h2>
+            <div className="tariff-grid">
+                <div className="tariff-card">
+                    <h3>{t('tariffOnTheGo')}</h3>
+                    <div className="price"><span>{t('priceOnTheGo')}</span> <span className="tooltip">{t('perCredit')}<span className="tooltiptext">{t('creditPopup')}</span></span></div>
+                    <p>{t('tariffOnTheGoDesc')}</p>
+                    <ul className="tariff-features">
+                        <li>{t('payAsYouGo')}</li>
+                        <li>{t('noSubscription')}</li>
+                    </ul>
+                    <button 
+                        className="btn-primary" 
+                        onClick={() => handlePayment('On the go')}
+                        aria-label={`Pay for ${t('tariffOnTheGo')}`}
+                        style={{ marginTop: '20px', width: '100%', border: 'none', cursor: 'pointer' }}
+                    >
+                        {t('pay')}
+                    </button>
+                </div>
+                <div className="tariff-card popular">
+                    <div className="badge">{t('popular')}</div>
+                    <h3>{t('tariffStarter')}</h3>
+                    <div className="price"><span>{t('priceStarter')}</span> <span>{t('perMonth')}</span></div>
+                    <p>{t('tariffStarterDesc')}</p>
+                    <ul className="tariff-features">
+                        <li>25 <span className="tooltip">{t('credits')}<span className="tooltiptext">{t('creditPopup')}</span></span></li>
+                        <li>{t('save20')}</li>
+                    </ul>
+                    <button 
+                        className="btn-primary" 
+                        onClick={() => handlePayment('Starter')}
+                        aria-label={`Pay for ${t('tariffStarter')}`}
+                        style={{ marginTop: '20px', width: '100%', border: 'none', cursor: 'pointer' }}
+                    >
+                        {t('pay')}
+                    </button>
+                </div>
+                <div className="tariff-card">
+                    <h3>{t('tariffStandard')}</h3>
+                    <div className="price"><span>{t('priceStandard')}</span> <span>{t('perMonth')}</span></div>
+                    <p>{t('tariffStandardDesc')}</p>
+                    <ul className="tariff-features">
+                        <li>60 <span className="tooltip">{t('credits')}<span className="tooltiptext">{t('creditPopup')}</span></span></li>
+                        <li>{t('save30')}</li>
+                    </ul>
+                    <button 
+                        className="btn-primary" 
+                        onClick={() => handlePayment('Standard')}
+                        aria-label={`Pay for ${t('tariffStandard')}`}
+                        style={{ marginTop: '20px', width: '100%', border: 'none', cursor: 'pointer' }}
+                    >
+                        {t('pay')}
+                    </button>
+                </div>
+            </div>
+        </section>
+    );
+};

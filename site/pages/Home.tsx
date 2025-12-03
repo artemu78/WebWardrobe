@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Tariffs } from '../components/Tariffs';
 import '../styles/Home.css';
 
 const translations: any = {
@@ -37,7 +38,9 @@ const translations: any = {
         anyWebsite: "Any Website",
         legalText: "",
         howToInstall: "How to install",
-        transformationTitle: "See the Difference"
+        transformationTitle: "See the Difference",
+        pay: "Pay",
+        creditPopup: "1 credit = 1 generation"
     },
     ru: {
         getExtension: "Скачать расширение",
@@ -74,7 +77,9 @@ const translations: any = {
         save30: "Экономия ~30%",
         anyWebsite: "Любого Сайта",
         legalText: "Рева Артем Владимирович ИНН 575400352100",
-        howToInstall: "Как установить"
+        howToInstall: "Как установить",
+        pay: "Оплатить",
+        creditPopup: "1 кредит = 1 генерация"
     },
     de: {
         getExtension: "Erweiterung holen",
@@ -111,7 +116,9 @@ const translations: any = {
         save30: "~30% sparen",
         anyWebsite: "Jeder Website",
         legalText: "",
-        howToInstall: "Installationsanleitung"
+        howToInstall: "Installationsanleitung",
+        pay: "Bezahlen",
+        creditPopup: "1 Credit = 1 Generierung"
     },
     es: {
         getExtension: "Obtener extensión",
@@ -148,7 +155,9 @@ const translations: any = {
         save30: "Ahorra ~30%",
         anyWebsite: "Cualquier Sitio Web",
         legalText: "",
-        howToInstall: "Cómo instalar"
+        howToInstall: "Cómo instalar",
+        pay: "Pagar",
+        creditPopup: "1 crédito = 1 generación"
     }
 };
 
@@ -301,39 +310,7 @@ const Home: React.FC = () => {
                 </div>
             </section>
 
-            <section id="tariffs" className="tariffs">
-                <h2>{t('tariffsTitle')}</h2>
-                <div className="tariff-grid">
-                    <div className="tariff-card">
-                        <h3>{t('tariffOnTheGo')}</h3>
-                        <div className="price"><span>{t('priceOnTheGo')}</span> <span>{t('perCredit')}</span></div>
-                        <p>{t('tariffOnTheGoDesc')}</p>
-                        <ul className="tariff-features">
-                            <li>{t('payAsYouGo')}</li>
-                            <li>{t('noSubscription')}</li>
-                        </ul>
-                    </div>
-                    <div className="tariff-card popular">
-                        <div className="badge">{t('popular')}</div>
-                        <h3>{t('tariffStarter')}</h3>
-                        <div className="price"><span>{t('priceStarter')}</span> <span>{t('perMonth')}</span></div>
-                        <p>{t('tariffStarterDesc')}</p>
-                        <ul className="tariff-features">
-                            <li>25 <span>{t('credits')}</span></li>
-                            <li>{t('save20')}</li>
-                        </ul>
-                    </div>
-                    <div className="tariff-card">
-                        <h3>{t('tariffStandard')}</h3>
-                        <div className="price"><span>{t('priceStandard')}</span> <span>{t('perMonth')}</span></div>
-                        <p>{t('tariffStandardDesc')}</p>
-                        <ul className="tariff-features">
-                            <li>60 <span>{t('credits')}</span></li>
-                            <li>{t('save30')}</li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
+            <Tariffs t={t} />
 
             <footer>
                 <p>&copy; 2025 WebWardrobe. All rights reserved.</p>
