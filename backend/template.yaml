@@ -296,6 +296,9 @@ Resources:
       CodeUri: .
       Handler: dispatcher_lambda.payment_link_handler
       Runtime: python3.9
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TryOnUserProfilesTable
       Environment:
         Variables:
           USER_TABLE_NAME: !Ref TryOnUserProfilesTable

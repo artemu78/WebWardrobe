@@ -1056,7 +1056,8 @@ def payment_link_handler(event, context):
             sku = "starter"
         elif tariff_name == 'Standard':
             credits = 60
-            price = credits * price_per_credit
+            # Apply discount for Standard: 60 credits for the price of 50
+            price = 50 * price_per_credit
             name = f"WebWardrobe: {credits} Credits"
             sku = "standard"
         else:
@@ -1076,7 +1077,7 @@ def payment_link_handler(event, context):
         # Constants
         PAYMENT_URL_RU = "https://web-wardrobe.payform.ru/"
         PAYMENT_URL_EN = "https://web-wardrobe.payform.ru/" # Same for now, or change if needed
-        PRODAMUS_SYS = "web_wardrobe" # Replace with actual sys if different
+        PRODAMUS_SYS = "webwardrobe" # Replace with actual sys if different
         
         # Construct Params
         params = {
@@ -1260,7 +1261,35 @@ def payment_webhook_handler(event, context):
         # Calculate Credits
         # 1 credit = PRICE_PER_CREDIT RUB
         amount = float(data.get('sum', 0))
-        credits_to_add = int(amount / PRICE_PER_CREDIT)
+        
+        # Try to determine credits from SKU first
+        sku = data.get('sku') or data.get('item_code')
+        # Check nested products if available
+        if not sku and 'products' in data:
+            try:
+                products_list = data['products']
+                if isinstance(products_list, list) and len(products_list) > 0:
+                    sku = products_list[0].get('sku')
+            except:
+                pass
+
+        if sku == 'standard':
+            credits_to_add = 60
+        elif sku == 'starter':
+            credits_to_add = 25
+        elif sku == 'on_the_go':
+            credits_to_add = 10
+        else:
+            # Fallback to amount-based calculation
+            # Check for specific discounted amounts (approximate)
+            if abs(amount - 1600) < 50: # Standard (1600 RUB)
+                credits_to_add = 60
+            elif abs(amount - 800) < 25: # Starter (800 RUB)
+                credits_to_add = 25
+            elif abs(amount - 320) < 10: # On the go (320 RUB)
+                credits_to_add = 10
+            else:
+                credits_to_add = int(amount / PRICE_PER_CREDIT)
         
         if credits_to_add <= 0:
             print("Warning: Credits to add is 0")
@@ -1268,18 +1297,42 @@ def payment_webhook_handler(event, context):
 
         print(f"Adding {credits_to_add} credits to user {user_id} for amount {amount}")
 
-        # Update DynamoDB
+        # Update DynamoDB with Idempotency Check
         user_table_name = os.environ['USER_TABLE_NAME']
         user_table = dynamodb.Table(user_table_name)
         
-        user_table.update_item(
-            Key={'userId': user_id},
-            UpdateExpression="set credits = if_not_exists(credits, :start) + :inc",
-            ExpressionAttributeValues={
-                ':inc': credits_to_add,
-                ':start': 5 # Default if missing
-            }
-        )
+        payment_id = data.get('payment_id') or data.get('order_id')
+        
+        try:
+            if payment_id:
+                user_table.update_item(
+                    Key={'userId': user_id},
+                    UpdateExpression="set credits = if_not_exists(credits, :start) + :inc, processed_payments = list_append(if_not_exists(processed_payments, :empty_list), :new_pid_list)",
+                    ConditionExpression="NOT contains(processed_payments, :pid)",
+                    ExpressionAttributeValues={
+                        ':inc': credits_to_add,
+                        ':start': 5,
+                        ':empty_list': [],
+                        ':new_pid_list': [str(payment_id)],
+                        ':pid': str(payment_id)
+                    }
+                )
+            else:
+                # Fallback without idempotency
+                user_table.update_item(
+                    Key={'userId': user_id},
+                    UpdateExpression="set credits = if_not_exists(credits, :start) + :inc",
+                    ExpressionAttributeValues={
+                        ':inc': credits_to_add,
+                        ':start': 5
+                    }
+                )
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+                print(f"Payment {payment_id} already processed")
+                return {'statusCode': 200, 'body': 'Already processed'}
+            else:
+                raise e
 
         return {'statusCode': 200, 'body': 'Success'}
 
