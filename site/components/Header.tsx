@@ -65,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
     };
 
     const t = (key: string) => {
-        return translations[lang]?.[key] || key;
+        return translations[lang]?.[key].toString();
     };
     return (
         <header>

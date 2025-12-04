@@ -210,7 +210,7 @@ const Home: React.FC = () => {
     }, []);
 
     const t = (key: string) => {
-        return translations[lang]?.[key] || key;
+        return translations[lang]?.[key].toString();
     };
     
     const tHtml = (key: string) => {
