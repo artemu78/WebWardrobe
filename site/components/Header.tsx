@@ -85,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
                         <option value="de">DE</option>
                         <option value="es">ES</option>
                     </select>
-                    <a href={chromeStoreUrl(lang)} className="btn-primary">{t('getExtension')}</a>
+                    <a href={chromeStoreUrl(lang)} className="btn-primary" target="_blank">{t('getExtension')}</a>
                     {user ? (
                         <div style={{position: 'relative'}}>
                             <div 

@@ -253,7 +253,7 @@ const Home: React.FC = () => {
                     <h1 dangerouslySetInnerHTML={tHtml('heroTitle')}></h1>
                     <p>{t('heroSubtitle')}</p>
                     <div className="hero-buttons">
-                        <a href={chromeStoreUrl(lang)} className="btn-primary">{t('addToChrome')}</a>
+                        <a href={chromeStoreUrl(lang)} className="btn-primary" target="_blank">{t('addToChrome')}</a>
                         <a href="#how-it-works" className="btn-secondary">{t('learnMore')}</a>
                     </div>
                 </div>

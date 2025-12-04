@@ -1,4 +1,5 @@
 import React from 'react';
+import { PAYMENT_URL, PRODAMUS_SYS } from '../constants';
 
 interface User {
     name: string;
@@ -62,7 +63,6 @@ export const Tariffs: React.FC<TariffsProps> = ({ t, user }) => {
                 return;
         }
 
-        const paymentUrl = "https://web-wardrobe.payform.ru/";
         const products = [
             {
                 name: name,
@@ -78,12 +78,13 @@ export const Tariffs: React.FC<TariffsProps> = ({ t, user }) => {
         params.append('products', JSON.stringify(products));
         params.append('customer_extra', userId);
         params.append('urlSuccess', window.location.origin + "?payment=success");
+        params.append('sys', PRODAMUS_SYS);
         
         if (user.email) {
             params.append('customer_email', user.email);
         }
 
-        window.location.href = `${paymentUrl}?${params.toString()}`;
+        window.location.href = `${PAYMENT_URL}?${params.toString()}`;
     };
 
     return (

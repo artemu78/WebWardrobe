@@ -12,7 +12,9 @@ import { InstructionStep } from "./types";
 
 export const ZIP_FILE_NAME = "web-wardrobe-chrome-extension-v2.11.2.zip";
 export const API_BASE_URL = "https://nw2ghqgbe5.execute-api.us-east-1.amazonaws.com/prod";
+export const PAYMENT_URL = "https://web-wardrobe.payform.ru/";
 export const chromeStoreUrl = (lang: string) => `https://chromewebstore.google.com/detail/webwardrobe-virtual-try-o/mnedlgljpikliopehlchhbdknehjakjf?authuser=0&hl=${lang}`;
+export const PRODAMUS_SYS = "webwardrobe";
 
 export const STEPS: InstructionStep[] = [
   {
