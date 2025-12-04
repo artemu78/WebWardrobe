@@ -1027,7 +1027,12 @@ def payment_link_handler(event, context):
         body = json.loads(event.get('body', '{}'))
         tariff_name = body.get('tariffName')
         lang = body.get('lang', 'en')
-        price_per_credit = body.get('pricePerCredit', 0.14) # Default to USD price if missing
+        
+        # Define price per credit based on language (server-side validation)
+        if lang == 'ru':
+            price_per_credit = 32
+        else:
+            price_per_credit = 0.4
         
         if not tariff_name:
             return {'statusCode': 400, 'body': json.dumps({'error': 'Missing tariffName'})}

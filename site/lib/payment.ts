@@ -5,10 +5,9 @@ interface PaymentParams {
     tariffName: string;
     user: User;
     lang: string;
-    pricePerCredit: number;
 }
 
-export const handlePayment = async ({ tariffName, user, lang, pricePerCredit }: PaymentParams) => {
+export const handlePayment = async ({ tariffName, user, lang }: PaymentParams) => {
     if (!user) {
         alert("Please sign in to purchase credits.");
         return;
@@ -29,8 +28,7 @@ export const handlePayment = async ({ tariffName, user, lang, pricePerCredit }: 
             },
             body: JSON.stringify({
                 tariffName,
-                lang,
-                pricePerCredit
+                lang
             })
         });
 

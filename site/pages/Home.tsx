@@ -49,7 +49,7 @@ const translations: any = {
         transformationTitle: "See the Difference",
         pay: "Pay",
         creditPopup: "1 credit = 1 generation",
-        pricePerCredit: 0.14
+
     },
     ru: {
         getExtension: "Скачать расширение",
@@ -89,7 +89,7 @@ const translations: any = {
         howToInstall: "Как установить",
         pay: "Оплатить",
         creditPopup: "1 кредит = 1 генерация",
-        pricePerCredit: 32
+
     },
     de: {
         getExtension: "Erweiterung holen",
@@ -129,7 +129,7 @@ const translations: any = {
         howToInstall: "Installationsanleitung",
         pay: "Bezahlen",
         creditPopup: "1 Credit = 1 Generierung",
-        pricePerCredit: 0.14
+
     },
     es: {
         getExtension: "Obtener extensión",
@@ -169,7 +169,7 @@ const translations: any = {
         howToInstall: "Cómo instalar",
         pay: "Pagar",
         creditPopup: "1 crédito = 1 generación",
-        pricePerCredit: 0.14
+
     }
 };
 
@@ -324,7 +324,7 @@ const Home: React.FC = () => {
                 </div>
             </section>
 
-            <Tariffs t={t} user={user} lang={lang} pricePerCredit={translations[lang].pricePerCredit} />
+            <Tariffs t={t} user={user} lang={lang} />
 
             <footer>
                 <p>&copy; 2025 WebWardrobe. All rights reserved.</p>
