@@ -2,11 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { API_BASE_URL, chromeStoreUrl } from '../constants';
 
 
-interface User {
-    name: string;
-    picture: string;
-    email?: string;
-}
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../store/store';
+import { fetchUserProfile, clearUser } from '../store/userProfileSlice';
 
 interface HeaderProps {
     translations: any;
@@ -15,7 +13,8 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const dispatch = useDispatch<AppDispatch>();
+    const { user } = useSelector((state: RootState) => state.userProfile);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     const handleLogin = () => {
@@ -32,31 +31,13 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
 
     useEffect(() => {
         const token = localStorage.getItem('google_access_token');
-        if (token) {
-            fetch(`${API_BASE_URL}/user/profile`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(res => {
-                if (res.ok) return res.json();
-                throw new Error('Failed to fetch user');
-            })
-            .then(data => {
-                if (data.name) {
-                    setUser({ name: data.name, picture: data.picture, email: data.email });
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                localStorage.removeItem('google_access_token');
-            });
+        if (token && !user) {
+            dispatch(fetchUserProfile());
         }
-    }, []);
+    }, [dispatch, user]);
 
     const handleSignOut = () => {
-        localStorage.removeItem('google_access_token');
-        setUser(null);
+        dispatch(clearUser());
         setIsDropdownOpen(false);
     };
 

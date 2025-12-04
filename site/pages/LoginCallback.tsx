@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_BASE_URL } from '../constants';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../store/store';
+import { fetchUserProfile } from '../store/userProfileSlice';
 
 const LoginCallback: React.FC = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch<AppDispatch>();
     const [status, setStatus] = useState('Processing login...');
 
     useEffect(() => {
@@ -20,16 +23,8 @@ const LoginCallback: React.FC = () => {
                     
                     // Trigger backend to save user info and wait for response
                     try {
-                        const response = await fetch(`${API_BASE_URL}/user/profile`, {
-                            headers: {
-                                'Authorization': `Bearer ${accessToken}`
-                            }
-                        });
-                        
-                        if (response.ok) {
-                            const data = await response.json();
-                            console.log('Profile synced:', data.name);
-                        }
+                        await dispatch(fetchUserProfile()).unwrap();
+                        console.log('Profile synced');
                     } catch (e) {
                         console.error("Failed to sync user profile", e);
                     }
@@ -56,7 +51,7 @@ const LoginCallback: React.FC = () => {
 
         handleLogin();
 
-    }, [navigate]);
+    }, [navigate, dispatch]);
 
     return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
