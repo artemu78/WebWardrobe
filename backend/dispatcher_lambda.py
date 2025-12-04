@@ -1341,4 +1341,3 @@ def payment_webhook_handler(event, context):
     except Exception as e:
         print(f"Error in webhook handler: {e}")
         return {'statusCode': 500, 'body': str(e)}
-```
