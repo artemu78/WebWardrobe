@@ -1135,7 +1135,7 @@ def payment_link_handler(event, context):
             "do": "pay",
             "products": json.dumps(products, separators=(',', ':'), ensure_ascii=False),
             "customer_extra": user_id,
-            "urlSuccess": "https://web-wardrobe.netlify.app/?payment=success",
+            "urlSuccess": os.environ.get('PRODAMUS_SUCCESS_URL', 'https://web-wardrobe.netlify.app/?payment=success'),
             "sys": PRODAMUS_SYS,
             "sign": signature
         }
