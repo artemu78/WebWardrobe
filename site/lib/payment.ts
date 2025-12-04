@@ -1,8 +1,9 @@
 import { API_BASE_URL } from '../constants';
+import { User } from '../types';
 
 interface PaymentParams {
     tariffName: string;
-    user: any;
+    user: User;
     lang: string;
     pricePerCredit: number;
 }

@@ -1,16 +1,10 @@
 import React from 'react';
 import { handlePayment } from '../lib/payment';
-
-interface User {
-    name: string;
-    picture: string;
-    email?: string;
-    userId?: string;
-}
+import { User } from '../types';
 
 interface TariffsProps {
     t: (key: string) => string;
-    user: any | null;
+    user: User | null;
     lang: string;
     pricePerCredit: number;
 }

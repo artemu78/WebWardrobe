@@ -17,3 +17,10 @@ export interface BrowserMockupProps {
   url?: string;
   active?: boolean;
 }
+
+export interface User {
+    name: string;
+    picture: string;
+    email?: string;
+    userId?: string;
+}
