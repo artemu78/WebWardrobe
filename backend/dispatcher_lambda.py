@@ -1076,7 +1076,7 @@ def payment_link_handler(event, context):
 
         # Constants
         PAYMENT_URL_RU = "https://web-wardrobe.payform.ru/"
-        PAYMENT_URL_EN = "https://web-wardrobe.payform.ru/" # Same for now, or change if needed
+        PAYMENT_URL_EN = "https://web-wardrobe-eng.payform.ru/" # Same for now, or change if needed
         PRODAMUS_SYS = "webwardrobe" # Replace with actual sys if different
         
         # Construct Params
@@ -1208,9 +1208,6 @@ def payment_webhook_handler(event, context):
         # Important: We must replicate exactly how Prodamus constructs the string to sign.
         # If they send JSON, we should probably just sort the JSON object.
         # If they send Form Data, we have a dict of strings.
-        
-        # Let's assume standard recursive sort.
-        sorted_data = {k: v for k, v in sorted(data.items())}
         
         # Note: The python example from Prodamus docs (if available) would be best.
         # Based on previous search: "sort callback data by keys, serialize to JSON"

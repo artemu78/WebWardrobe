@@ -34,8 +34,8 @@ export const handlePayment = async ({ tariffName, user, lang, pricePerCredit }: 
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to generate payment link');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData?.error || 'Failed to generate payment link');
         }
 
         const data = await response.json();
