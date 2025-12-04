@@ -1084,7 +1084,7 @@ def payment_link_handler(event, context):
             "do": "pay",
             "products": products, # Will be normalized to list of dicts
             "customer_extra": user_id,
-            "urlSuccess": "https://web-wardrobe.netlify.app/?payment=success", # Hardcoded or from env
+            "urlSuccess": os.environ.get('PRODAMUS_SUCCESS_URL', 'https://web-wardrobe.netlify.app/?payment=success'), # Hardcoded or from env
             "sys": PRODAMUS_SYS
         }
         
