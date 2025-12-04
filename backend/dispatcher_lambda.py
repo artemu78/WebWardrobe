@@ -1108,9 +1108,10 @@ def payment_link_handler(event, context):
         json_str = json_str.replace('/', '\\/')
 
         # 3. Sign
-        secret_key = os.environ.get('PRODAMUS_SECRET_KEY', '')
+        secret_key = os.environ.get('PRODAMUS_SECRET_KEY')
         if not secret_key:
-            print("WARNING: PRODAMUS_SECRET_KEY is missing")
+            print("ERROR: PRODAMUS_SECRET_KEY is missing")
+            return {'statusCode': 500, 'body': json.dumps({'error': 'Internal server configuration error'})}
         
         signature = hmac.new(
             secret_key.encode('utf-8'),
