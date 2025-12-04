@@ -1213,17 +1213,13 @@ def payment_webhook_handler(event, context):
         
         # Note: The python example from Prodamus docs (if available) would be best.
         # Based on previous search: "sort callback data by keys, serialize to JSON"
-        
-        # We need to be careful about recursive sorting if there are nested objects.
-        # But usually flat webhooks are common.
-        # Let's use a recursive sort helper just in case.
         def recursive_sort(obj):
             if isinstance(obj, dict):
                 return {k: recursive_sort(v) for k, v in sorted(obj.items())}
             elif isinstance(obj, list):
                 return [recursive_sort(x) for x in obj]
             else:
-                return str(obj)
+                return str(obj) # Convert all values to string for consistency
         
         sorted_data_recursive = recursive_sort(data)
         
