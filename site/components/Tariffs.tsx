@@ -12,11 +12,12 @@ interface TariffsProps {
     t: (key: string) => string;
     user: any | null;
     lang: string;
+    pricePerCredit: number;
 }
 
-export const Tariffs: React.FC<TariffsProps> = ({ t, user, lang }) => {
+export const Tariffs: React.FC<TariffsProps> = ({ t, user, lang, pricePerCredit }) => {
     const onPay = (tariffName: string) => {
-        handlePayment({ tariffName, user, lang });
+        handlePayment({ tariffName, user, lang, pricePerCredit });
     };
 
     return (

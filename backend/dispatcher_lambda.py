@@ -16,6 +16,8 @@ s3_client = boto3.client('s3')
 
 import urllib.request
 
+PRICE_PER_CREDIT = 32
+
 def get_user_id_from_token(event):
     """
     Extracts user ID from Authorization header (Google OAuth Token)
@@ -1025,6 +1027,7 @@ def payment_link_handler(event, context):
         body = json.loads(event.get('body', '{}'))
         tariff_name = body.get('tariffName')
         lang = body.get('lang', 'en')
+        price_per_credit = body.get('pricePerCredit', 0.14) # Default to USD price if missing
         
         if not tariff_name:
             return {'statusCode': 400, 'body': json.dumps({'error': 'Missing tariffName'})}
@@ -1042,18 +1045,18 @@ def payment_link_handler(event, context):
         sku = "none"
 
         if tariff_name == 'On the go':
-            price = 320 # 10 credits
             credits = 10
+            price = credits * price_per_credit
             name = f"WebWardrobe: {credits} Credits"
             sku = "on_the_go"
         elif tariff_name == 'Starter':
-            price = 800 # 25 credits
             credits = 25
+            price = credits * price_per_credit
             name = f"WebWardrobe: {credits} Credits"
             sku = "starter"
         elif tariff_name == 'Standard':
-            price = 1600 # 60 credits
             credits = 60
+            price = credits * price_per_credit
             name = f"WebWardrobe: {credits} Credits"
             sku = "standard"
         else:
@@ -1199,18 +1202,7 @@ def payment_webhook_handler(event, context):
         # The documentation says: "multi-level sorting of the array by keys"
         # And "convert all data to strings"
         
-        def normalize_and_sort_webhook(obj):
-            if isinstance(obj, dict):
-                return {k: normalize_and_sort_webhook(v) for k, v in sorted(obj.items())}
-            elif isinstance(obj, list):
-                return [normalize_and_sort_webhook(x) for x in obj]
-            else:
-                # Prodamus sends numbers as strings in form data, but maybe numbers in JSON?
-                # It's safer to convert everything to string for signature check if that's the rule.
-                # However, usually webhooks preserve types if JSON.
-                # Let's try to keep as is if JSON, or convert.
-                # The python snippet from docs uses `json.dumps(..., ensure_ascii=False)` on the sorted dict.
-                return str(obj)
+
 
         # Important: We must replicate exactly how Prodamus constructs the string to sign.
         # If they send JSON, we should probably just sort the JSON object.
@@ -1231,7 +1223,7 @@ def payment_webhook_handler(event, context):
             elif isinstance(obj, list):
                 return [recursive_sort(x) for x in obj]
             else:
-                return obj # Keep types as is? Or str?
+                return str(obj)
         
         sorted_data_recursive = recursive_sort(data)
         
@@ -1270,9 +1262,9 @@ def payment_webhook_handler(event, context):
             return {'statusCode': 400, 'body': 'Missing user_id'}
 
         # Calculate Credits
-        # 1 credit = 32 RUB
+        # 1 credit = PRICE_PER_CREDIT RUB
         amount = float(data.get('sum', 0))
-        credits_to_add = int(amount / 32)
+        credits_to_add = int(amount / PRICE_PER_CREDIT)
         
         if credits_to_add <= 0:
             print("Warning: Credits to add is 0")

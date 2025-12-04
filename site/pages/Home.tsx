@@ -48,7 +48,8 @@ const translations: any = {
         howToInstall: "How to install",
         transformationTitle: "See the Difference",
         pay: "Pay",
-        creditPopup: "1 credit = 1 generation"
+        creditPopup: "1 credit = 1 generation",
+        pricePerCredit: 0.14
     },
     ru: {
         getExtension: "Скачать расширение",
@@ -87,7 +88,8 @@ const translations: any = {
         legalText: "Рева Артем Владимирович ИНН 575400352100",
         howToInstall: "Как установить",
         pay: "Оплатить",
-        creditPopup: "1 кредит = 1 генерация"
+        creditPopup: "1 кредит = 1 генерация",
+        pricePerCredit: 32
     },
     de: {
         getExtension: "Erweiterung holen",
@@ -126,7 +128,8 @@ const translations: any = {
         legalText: "",
         howToInstall: "Installationsanleitung",
         pay: "Bezahlen",
-        creditPopup: "1 Credit = 1 Generierung"
+        creditPopup: "1 Credit = 1 Generierung",
+        pricePerCredit: 0.14
     },
     es: {
         getExtension: "Obtener extensión",
@@ -165,7 +168,8 @@ const translations: any = {
         legalText: "",
         howToInstall: "Cómo instalar",
         pay: "Pagar",
-        creditPopup: "1 crédito = 1 generación"
+        creditPopup: "1 crédito = 1 generación",
+        pricePerCredit: 0.14
     }
 };
 
@@ -320,7 +324,7 @@ const Home: React.FC = () => {
                 </div>
             </section>
 
-            <Tariffs t={t} user={user} />
+            <Tariffs t={t} user={user} lang={lang} pricePerCredit={translations[lang].pricePerCredit} />
 
             <footer>
                 <p>&copy; 2025 WebWardrobe. All rights reserved.</p>
