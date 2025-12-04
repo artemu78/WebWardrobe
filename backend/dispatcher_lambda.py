@@ -16,6 +16,8 @@ s3_client = boto3.client('s3')
 
 import urllib.request
 
+PRICE_PER_CREDIT = 32
+
 def get_user_id_from_token(event):
     """
     Extracts user ID from Authorization header (Google OAuth Token)
@@ -1001,143 +1003,342 @@ def saver_handler(event, context):
 import hmac
 import hashlib
 
-def payment_webhook_handler(event, context):
+
+def payment_link_handler(event, context):
     """
-    Handle Prodamus payment webhook.
-    Verifies signature and credits user account.
+    Handle POST /payment/link requests: generate a signed Prodamus payment URL.
+    
+    Expects:
+    - event['body'] JSON containing `tariffName` (string) and `lang` (string).
+    - Authorization via headers (Bearer token validated by get_user_id_from_token).
+    - Environment variables: PRODAMUS_SECRET_KEY.
+    
+    Returns:
+    - 200: {'url': <signed_payment_url>}
+    - 400: missing parameters
+    - 401: unauthorized
+    - 500: unexpected error
     """
     try:
-        # 1. Get Secret Key
-        secret_key = os.environ.get('PRODAMUS_SECRET_KEY', 'dummy_secret')
-        
-        # 2. Parse Body
-        # Prodamus sends data as form-urlencoded or JSON?
-        # Usually POST request with form data.
-        # API Gateway might have base64 encoded body if it's form-data
-        body_str = event.get('body', '')
-        if event.get('isBase64Encoded', False):
-            body_str = base64.b64decode(body_str).decode('utf-8')
-        
-        # Parse query params or body params
-        # Prodamus sends POST parameters.
-        # We need to parse them into a dict.
-        params = {}
-        # Check content type
-        content_type = event.get('headers', {}).get('content-type', '') or event.get('headers', {}).get('Content-Type', '')
-        
-        if 'application/json' in content_type:
-            params = json.loads(body_str)
-        else:
-            # Assume form-urlencoded
-            parsed = urllib.parse.parse_qsl(body_str, keep_blank_values=True)
-            params = dict(parsed)
-
-        # 3. Verify Signature
-        # Signature is in 'sign' header or 'Sign' header
-        headers = event.get('headers', {})
-        received_sign = headers.get('sign') or headers.get('Sign')
-        
-        if not received_sign:
-             print("Missing signature")
-             return {'statusCode': 400, 'body': 'Missing signature'}
-
-        # Construct signature base
-        # Sort params by key (alphabetical), exclude 'sign' if present in body (usually it's in header)
-        # Prodamus algorithm:
-        # 1. Sort params alphabetically by key.
-        # 2. Concatenate values? Or build query string?
-        # Documentation says: "sign" header is HMAC-SHA256 of the request body?
-        # Or specific construction?
-        # Search result said: "data (a dictionary or object representing the POST request body) should be sorted by its keys and then serialized into a JSON string."
-        # Wait, if it's form-data, JSON serialization might be tricky.
-        # Let's try to replicate standard Prodamus verification.
-        # "The data... should be sorted by its keys and then serialized into a JSON string."
-        # This implies we should convert params to a sorted dict, then json.dumps with specific separators?
-        # Actually, Prodamus often sends a specific format.
-        # Let's assume the body is the data if it's JSON.
-        # If it's form data, we convert to dict, sort, then JSON dump?
-        # Let's try to be robust.
-        
-        # Re-reading search result: "data... sorted by its keys and then serialized into a JSON string."
-        # This usually means `json.dumps(params, sort_keys=True, separators=(',', ':'), ensure_ascii=False)` or similar.
-        # Let's try standard json dumps with sort_keys=True.
-        
-        # However, if the request came as form-data, types might be all strings.
-        # If the request came as JSON, types might be preserved.
-        # Prodamus usually sends form-data.
-        
-        # Let's try to verify using the raw body if possible? No, order matters.
-        
-        # Let's implement the "sort and json dump" approach.
-        sorted_params = dict(sorted(params.items()))
-        
-        # Note: Prodamus might require specific JSON formatting (no spaces).
-        # separators=(',',':') removes spaces.
-        # ensure_ascii=False allows unicode.
-        msg = json.dumps(sorted_params, sort_keys=True, separators=(',',':'), ensure_ascii=False)
-        
-        # Calculate HMAC
-        key_bytes = secret_key.encode('utf-8')
-        msg_bytes = msg.encode('utf-8')
-        signature = hmac.new(key_bytes, msg_bytes, hashlib.sha256).hexdigest()
-        
-        if signature != received_sign:
-            print(f"Signature mismatch. Calculated: {signature}, Received: {received_sign}")
-            # For debugging, let's print the msg base
-            print(f"Sign base: {msg}")
-            # Return 400 or 403
-            # For now, if dummy secret, we might fail.
-            # But we must implement it.
-            return {'statusCode': 403, 'body': 'Invalid signature'}
-
-        # 4. Process Payment
-        # Check payment status
-        payment_status = params.get('payment_status')
-        if payment_status != 'success':
-            return {'statusCode': 200, 'body': 'Not a success status'}
-
-        # Get User ID
-        user_id = params.get('customer_extra')
+        user_id = get_user_id_from_token(event)
         if not user_id:
-            print("Missing customer_extra (userId)")
-            return {'statusCode': 200, 'body': 'Missing userId'}
+             return {'statusCode': 401, 'body': json.dumps({'error': 'Unauthorized'})}
 
-        # Get Amount
-        amount_str = params.get('sum', '0')
-        try:
-            amount = float(amount_str)
-        except:
-            amount = 0
-            
+        body = json.loads(event.get('body', '{}'))
+        tariff_name = body.get('tariffName')
+        lang = body.get('lang', 'en')
+        
+        # Define price per credit based on language (server-side validation)
+        if lang == 'ru':
+            price_per_credit = 32
+        else:
+            price_per_credit = 0.4
+        
+        if not tariff_name:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'Missing tariffName'})}
+
+        # Fetch user email if available
+        user_table_name = os.environ['USER_TABLE_NAME']
+        user_table = dynamodb.Table(user_table_name)
+        user_profile = user_table.get_item(Key={'userId': user_id}).get('Item', {})
+        user_email = user_profile.get('email')
+
+        # Define Tariff Details
+        price = 0
+        credits = 0
+        name = "none"
+        sku = "none"
+
+        if tariff_name == 'On the go':
+            credits = 10
+            price = credits * price_per_credit
+            name = f"WebWardrobe: {credits} Credits"
+            sku = "on_the_go"
+        elif tariff_name == 'Starter':
+            credits = 25
+            price = credits * price_per_credit
+            name = f"WebWardrobe: {credits} Credits"
+            sku = "starter"
+        elif tariff_name == 'Standard':
+            credits = 60
+            # Apply discount for Standard: 60 credits for the price of 50
+            price = 50 * price_per_credit
+            name = f"WebWardrobe: {credits} Credits"
+            sku = "standard"
+        else:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'Invalid tariff'})}
+
+        products = [
+            {
+                "name": name,
+                "price": price,
+                "quantity": 1,
+                "tax": "none",
+                "type": "service",
+                "sku": sku
+            }
+        ]
+
+        # Constants
+        PAYMENT_URL_RU = "https://web-wardrobe.payform.ru/"
+        PAYMENT_URL_EN = "https://web-wardrobe-eng.payform.ru/" # Same for now, or change if needed
+        PRODAMUS_SYS = "webwardrobe" # Replace with actual sys if different
+        
+        # Construct Params
+        params = {
+            "do": "pay",
+            "products": products, # Will be normalized to list of dicts
+            "customer_extra": user_id,
+            "urlSuccess": os.environ.get('PRODAMUS_SUCCESS_URL', 'https://web-wardrobe.netlify.app/?payment=success'), # Hardcoded or from env
+            "sys": PRODAMUS_SYS
+        }
+        
+        if user_email:
+            params["customer_email"] = user_email
+
+        # 1. Normalize and Sort
+        def normalize_and_sort(obj):
+            if isinstance(obj, dict):
+                return {k: normalize_and_sort(v) for k, v in sorted(obj.items())}
+            elif isinstance(obj, list):
+                return [normalize_and_sort(x) for x in obj]
+            else:
+                return str(obj)
+
+        normalized_params = normalize_and_sort(params)
+
+        # 2. Serialize to JSON with slash escaping
+        # Python's json.dumps escapes / as \/ if we use a custom encoder or replace
+        # Standard json.dumps does NOT escape forward slashes by default.
+        # We need to mimic the behavior: replace / with \/
+        json_str = json.dumps(normalized_params, separators=(',', ':'), ensure_ascii=False)
+        # Prodamus expects slashes to be escaped? The JS code did `replace(/\//g, '\\/')`.
+        # Let's do the same.
+        json_str = json_str.replace('/', '\\/')
+
+        # 3. Sign
+        secret_key = os.environ.get('PRODAMUS_SECRET_KEY')
+        if not secret_key:
+            print("ERROR: PRODAMUS_SECRET_KEY is missing")
+            return {'statusCode': 500, 'body': json.dumps({'error': 'Internal server configuration error'})}
+        
+        signature = hmac.new(
+            secret_key.encode('utf-8'),
+            json_str.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+
+        # 4. Construct Final URL
+        # We need to send params as GET parameters.
+        # `products` must be JSON stringified.
+        query_params = {
+            "do": "pay",
+            "products": json.dumps(products, separators=(',', ':'), ensure_ascii=False),
+            "customer_extra": user_id,
+            "urlSuccess": os.environ.get('PRODAMUS_SUCCESS_URL', 'https://web-wardrobe.netlify.app/?payment=success'),
+            "sys": PRODAMUS_SYS,
+            "sign": signature
+        }
+        if user_email:
+            query_params["customer_email"] = user_email
+
+        base_url = PAYMENT_URL_RU if lang == 'ru' else PAYMENT_URL_EN
+        final_url = f"{base_url}?{urllib.parse.urlencode(query_params)}"
+
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'url': final_url})
+        }
+
+    except Exception as e:
+        print(f"Error generating payment link: {e}")
+        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+
+def payment_webhook_handler(event, context):
+    """
+    Handle Prodamus payment webhook notifications.
+    Verifies signature and updates user credits.
+    """
+    try:
+        print("Received webhook event:", json.dumps(event))
+        
+        secret_key = os.environ.get('PRODAMUS_SECRET_KEY')
+        if not secret_key:
+            print("Error: PRODAMUS_SECRET_KEY not configured")
+            return {'statusCode': 500, 'body': 'Configuration error'}
+
+        headers = event.get('headers', {})
+        # Headers can be case-insensitive
+        sign_header = headers.get('Sign') or headers.get('sign')
+        
+        if not sign_header:
+            print("Error: Missing Sign header")
+            return {'statusCode': 403, 'body': 'Missing signature'}
+
+        # Parse body
+        body_str = event.get('body', '')
+        content_type = headers.get('content-type', '') or headers.get('Content-Type', '')
+
+        data = {}
+        if 'application/json' in content_type:
+            data = json.loads(body_str)
+        elif 'application/x-www-form-urlencoded' in content_type:
+            # Parse form data
+            parsed = urllib.parse.parse_qs(body_str)
+            # parse_qs returns lists, we need single values
+            for k, v in parsed.items():
+                data[k] = v[0]
+        else:
+             # Fallback try JSON
+            try:
+                data = json.loads(body_str)
+            except:
+                pass
+
+        if not data:
+             print("Error: Empty or unparseable body")
+             return {'statusCode': 400, 'body': 'Invalid body'}
+
+        # Verify Signature
+        # 1. Sort keys alphabetically
+        # 2. Serialize to JSON (separators=(',',':'), ensure_ascii=False)
+        # 3. HMAC-SHA256
+        
+        # We need to normalize data values to strings as well?
+        # The documentation says: "multi-level sorting of the array by keys"
+        # And "convert all data to strings"
+        
+
+
+        # Important: We must replicate exactly how Prodamus constructs the string to sign.
+        # If they send JSON, we should probably just sort the JSON object.
+        # If they send Form Data, we have a dict of strings.
+        
+        # Note: The python example from Prodamus docs (if available) would be best.
+        # Based on previous search: "sort callback data by keys, serialize to JSON"
+        def recursive_sort(obj):
+            if isinstance(obj, dict):
+                return {k: recursive_sort(v) for k, v in sorted(obj.items())}
+            elif isinstance(obj, list):
+                return [recursive_sort(x) for x in obj]
+            else:
+                return str(obj) # Convert all values to string for consistency
+        
+        sorted_data_recursive = recursive_sort(data)
+        
+        # Serialize
+        # separators=(',', ':') removes whitespace
+        # ensure_ascii=False allows non-ASCII chars (e.g. Russian)
+        json_str = json.dumps(sorted_data_recursive, separators=(',', ':'), ensure_ascii=False)
+        
+        # Prodamus might escape slashes too?
+        # "In the resulting JSON string, escape all / characters." - from User Request for LINK generation.
+        # Does it apply to Webhook verification? Usually yes, the algorithm is symmetric.
+        json_str = json_str.replace('/', '\\/')
+        
+        my_signature = hmac.new(
+            secret_key.encode('utf-8'),
+            json_str.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+        
+        if my_signature.lower() != sign_header.lower():
+            print(f"Signature mismatch. Received: {sign_header}, Calculated: {my_signature}")
+            print(f"String used for signature: {json_str}")
+            return {'statusCode': 403, 'body': 'Signature mismatch'}
+
+        # Process Payment
+        payment_status = data.get('payment_status')
+        if payment_status != 'success':
+            print(f"Payment status is {payment_status}, ignoring.")
+            return {'statusCode': 200, 'body': 'Ignored'}
+
+        # Extract User ID
+        # We passed it in 'customer_extra'
+        user_id = data.get('customer_extra')
+        if not user_id:
+            print("Error: No user_id in customer_extra")
+            return {'statusCode': 400, 'body': 'Missing user_id'}
+
         # Calculate Credits
-        # 320 RUB = 10 credits
-        # 1 credit = 32 RUB
-        credits_to_add = int(amount / 32)
+        # 1 credit = PRICE_PER_CREDIT RUB
+        amount = float(data.get('sum', 0))
+        
+        # Try to determine credits from SKU first
+        sku = data.get('sku') or data.get('item_code')
+        # Check nested products if available
+        if not sku and 'products' in data:
+            try:
+                products_list = data['products']
+                if isinstance(products_list, list) and len(products_list) > 0:
+                    sku = products_list[0].get('sku')
+            except:
+                pass
+
+        if sku == 'standard':
+            credits_to_add = 60
+        elif sku == 'starter':
+            credits_to_add = 25
+        elif sku == 'on_the_go':
+            credits_to_add = 10
+        else:
+            # Fallback to amount-based calculation
+            # Check for specific discounted amounts (approximate)
+            if abs(amount - 1600) < 50: # Standard (1600 RUB)
+                credits_to_add = 60
+            elif abs(amount - 800) < 25: # Starter (800 RUB)
+                credits_to_add = 25
+            elif abs(amount - 320) < 10: # On the go (320 RUB)
+                credits_to_add = 10
+            else:
+                credits_to_add = int(amount / PRICE_PER_CREDIT)
         
         if credits_to_add <= 0:
-            print(f"Amount {amount} too small for credits")
-            return {'statusCode': 200, 'body': 'Amount too small'}
+            print("Warning: Credits to add is 0")
+            return {'statusCode': 200, 'body': 'No credits to add'}
 
-        # Update User Credits
+        print(f"Adding {credits_to_add} credits to user {user_id} for amount {amount}")
+
+        # Update DynamoDB with Idempotency Check
         user_table_name = os.environ['USER_TABLE_NAME']
         user_table = dynamodb.Table(user_table_name)
         
+        payment_id = data.get('payment_id') or data.get('order_id')
+        
         try:
-            user_table.update_item(
-                Key={'userId': user_id},
-                UpdateExpression="set credits = if_not_exists(credits, :start) + :inc",
-                ExpressionAttributeValues={
-                    ':inc': credits_to_add,
-                    ':start': 5
-                }
-            )
-            print(f"Added {credits_to_add} credits to user {user_id}")
-        except Exception as e:
-            print(f"Failed to add credits: {e}")
-            return {'statusCode': 500, 'body': 'DB Error'}
+            if payment_id:
+                user_table.update_item(
+                    Key={'userId': user_id},
+                    UpdateExpression="set credits = if_not_exists(credits, :start) + :inc, processed_payments = list_append(if_not_exists(processed_payments, :empty_list), :new_pid_list)",
+                    ConditionExpression="NOT contains(processed_payments, :pid)",
+                    ExpressionAttributeValues={
+                        ':inc': credits_to_add,
+                        ':start': 5,
+                        ':empty_list': [],
+                        ':new_pid_list': [str(payment_id)],
+                        ':pid': str(payment_id)
+                    }
+                )
+            else:
+                # Fallback without idempotency
+                user_table.update_item(
+                    Key={'userId': user_id},
+                    UpdateExpression="set credits = if_not_exists(credits, :start) + :inc",
+                    ExpressionAttributeValues={
+                        ':inc': credits_to_add,
+                        ':start': 5
+                    }
+                )
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+                print(f"Payment {payment_id} already processed")
+                return {'statusCode': 200, 'body': 'Already processed'}
+            else:
+                raise e
 
-        return {'statusCode': 200, 'body': 'OK'}
+        return {'statusCode': 200, 'body': 'Success'}
 
     except Exception as e:
-        print(f"Error in webhook: {e}")
+        print(f"Error in webhook handler: {e}")
         return {'statusCode': 500, 'body': str(e)}
+```
