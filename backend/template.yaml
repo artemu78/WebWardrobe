@@ -290,6 +290,24 @@ Resources:
             Path: /payment/webhook
             Method: POST
 
+  PaymentLinkFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: dispatcher_lambda.payment_link_handler
+      Runtime: python3.9
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Ref TryOnUserProfilesTable
+          PRODAMUS_SECRET_KEY: !Ref ProdamusSecretKey
+      Events:
+        PaymentLink:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TryOnApi
+            Path: /payment/link
+            Method: POST
+
   # -------------------------------------------------------------------------
   # S3 Bucket
   # -------------------------------------------------------------------------
