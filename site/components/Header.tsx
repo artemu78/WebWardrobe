@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL, chromeStoreUrl } from '../constants';
+
 
 interface User {
     name: string;
@@ -66,7 +67,6 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
     const t = (key: string) => {
         return translations[lang]?.[key] || key;
     };
-
     return (
         <header>
             <nav>
@@ -85,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
                         <option value="de">DE</option>
                         <option value="es">ES</option>
                     </select>
-                    <a href="#" className="btn-primary">{t('getExtension')}</a>
+                    <a href={chromeStoreUrl(lang)} className="btn-primary">{t('getExtension')}</a>
                     {user ? (
                         <div style={{position: 'relative'}}>
                             <div 

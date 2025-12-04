@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Tariffs } from '../components/Tariffs';
 import '../styles/Home.css';
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL, chromeStoreUrl } from '../constants';
 
 interface User {
     name: string;
@@ -246,7 +246,6 @@ const Home: React.FC = () => {
             return () => window.removeEventListener('scroll', handleScroll);
         }
     }, []);
-
     return (
         <div className="home-page">
             <section className="hero">
@@ -254,7 +253,7 @@ const Home: React.FC = () => {
                     <h1 dangerouslySetInnerHTML={tHtml('heroTitle')}></h1>
                     <p>{t('heroSubtitle')}</p>
                     <div className="hero-buttons">
-                        <a href="#" className="btn-primary">{t('addToChrome')}</a>
+                        <a href={chromeStoreUrl(lang)} className="btn-primary">{t('addToChrome')}</a>
                         <a href="#how-it-works" className="btn-secondary">{t('learnMore')}</a>
                     </div>
                 </div>
@@ -325,7 +324,6 @@ const Home: React.FC = () => {
 
             <footer>
                 <p>&copy; 2025 WebWardrobe. All rights reserved.</p>
-                <p><a href="/install" style={{color: 'inherit', textDecoration: 'underline'}}>{t('howToInstall')}</a></p>
                 <p style={{fontSize: '12px', color: '#444', marginTop: '10px'}}>{t('legalText')}</p>
             </footer>
         </div>
