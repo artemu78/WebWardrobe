@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "WebWardrobe Virtual Try-On",
-  "version": "2.11.5",
+  "version": "2.11.9",
   "description": "Try on clothes from any website using your own photos.",
   "permissions": [
     "contextMenus",
@@ -13,17 +13,6 @@
   "background": {
     "service_worker": "background.js"
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "http://localhost:5173/*",
-        "https://*.netlify.app/*"
-      ],
-      "js": [
-        "site_content.js"
-      ]
-    }
-  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
