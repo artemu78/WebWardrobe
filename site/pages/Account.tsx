@@ -18,9 +18,20 @@ const Account: React.FC = () => {
     }, [dispatch, user]);
 
     if (!user) {
+        const hasToken = localStorage.getItem('google_access_token');
+        // If there is a token but no user, we are in a loading state (waiting for fetch)
+        // If there is no token, we are not loading (showing sign in prompt)
+        if (hasToken) {
+             return (
+                <div className="account-container" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh'}}>
+                    <Loader2 className="animate-spin" size={32} />
+                </div>
+            );
+        }
+
         return (
             <div className="account-container" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh'}}>
-                {userStatus === 'loading' ? <Loader2 className="animate-spin" size={32} /> : <p>Please sign in to view your account.</p>}
+                <p>Please sign in to view your account.</p>
             </div>
         );
     }
