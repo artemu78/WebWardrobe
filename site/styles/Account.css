@@ -93,10 +93,7 @@
     opacity: 1;
 }
 
-.card-actions {
-    display: flex;
-    gap: 10px;
-}
+
 
 .action-btn {
     background: rgba(255,255,255,0.2);
