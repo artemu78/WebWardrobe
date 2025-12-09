@@ -41,6 +41,24 @@ const Account: React.FC = () => {
         closeModal();
     };
 
+    const handleDownload = async (url: string, filename: string) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('Download failed:', error);
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+    };
+
     const handleDeleteSelfie = (id: string, e: React.MouseEvent) => {
         e.preventDefault(); 
         setModalState({
@@ -105,7 +123,7 @@ const Account: React.FC = () => {
                                         className="action-btn" 
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            window.open(image.s3Url, '_blank');
+                                            handleDownload(image.s3Url, image.name || `selfie-${image.id}.jpg`);
                                         }}
                                         title="Download"
                                     >
@@ -143,7 +161,10 @@ const Account: React.FC = () => {
                                 <div className="card-overlay">
                                      <button 
                                         className="action-btn" 
-                                        onClick={() => window.open(gen.resultUrl, '_blank')}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleDownload(gen.resultUrl, `generation-${gen.jobId}.jpg`);
+                                        }}
                                         title="Download"
                                     >
                                         <Download size={18} />
