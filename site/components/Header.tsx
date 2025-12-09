@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL, chromeStoreUrl } from '../constants';
-
+import { Link } from 'react-router-dom';
 
 import { Menu, X } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
 import { fetchUserProfile, clearUser } from '../store/userProfileSlice';
+import '../styles/Header.css';
 
 interface HeaderProps {
     translations: any;
@@ -82,85 +83,35 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
                         </select>
                         <a href={chromeStoreUrl(lang)} className="btn-primary" target="_blank" rel="noopener noreferrer">{t('getExtension')}</a>
                         {user ? (
-                            <div style={{position: 'relative'}}>
+                            <div className="user-menu-container">
                                 <div 
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="btn-secondary"
-                                    style={{
-                                        display: 'flex', 
-                                        alignItems: 'center', 
-                                        gap: '8px', 
-                                        cursor: 'pointer',
-                                        padding: '10px 20px',
-                                        border: '2px solid var(--primary-color)',
-                                        borderRadius: '30px',
-                                        background: 'transparent',
-                                        transition: 'background 0.2s',
-                                        fontWeight: 600
-                                    }}
+                                    className="btn-secondary user-menu-trigger"
                                 >
-                                    <span style={{fontSize: '14px', color: 'white'}}>{user.name}</span>
+                                    <span className="user-name">{user.name}</span>
                                     {user.picture ? (
-                                        <img src={user.picture} alt="Avatar" style={{width: '24px', height: '24px', borderRadius: '50%'}} />
+                                        <img src={user.picture} alt="Avatar" className="user-avatar" />
                                     ) : (
-                                        <div style={{width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#ccc'}}></div>
+                                        <div className="user-avatar-placeholder"></div>
                                     )}
                                 </div>
                                 {isDropdownOpen && (
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '100%',
-                                        right: 0,
-                                        marginTop: '8px',
-                                        backgroundColor: 'white',
-                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                        borderRadius: '8px',
-                                        padding: '8px',
-                                        zIndex: 100,
-                                        minWidth: '200px'
-                                    }}>
+                                    <div className="user-dropdown">
                                         {user.email && (
-                                            <div style={{
-                                                padding: '8px 12px', 
-                                                fontSize: '12px', 
-                                                color: '#666', 
-                                                borderBottom: '1px solid #eee', 
-                                                marginBottom: '8px',
-                                                wordBreak: 'break-all'
-                                            }}>
+                                            <div className="dropdown-email">
                                                 {user.email}
                                             </div>
                                         )}
-                                        <a href="/account" style={{
-                                            display: 'block',
-                                            width: '100%',
-                                            padding: '10px 12px',
-                                            color: '#333',
-                                            textDecoration: 'none',
-                                            fontSize: '14px',
-                                            fontWeight: 600,
-                                            borderRadius: '4px',
-                                            marginBottom: '4px',
-                                            boxSizing: 'border-box',
-                                            cursor: 'pointer'
-                                        }}
-                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
-                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        <Link 
+                                            to="/account" 
+                                            className="dropdown-link"
+                                            onClick={() => setIsDropdownOpen(false)}
                                         >
                                             Account
-                                        </a>
+                                        </Link>
                                         <button 
                                             onClick={handleSignOut}
-                                            className="btn-primary"
-                                            style={{
-                                                width: '100%',
-                                                padding: '10px 20px',
-                                                border: 'none',
-                                                borderRadius: '30px',
-                                                cursor: 'pointer',
-                                                fontSize: '14px',
-                                                fontWeight: 600
-                                            }}
+                                            className="btn-primary dropdown-btn"
                                         >
                                             Sign out
                                         </button>
