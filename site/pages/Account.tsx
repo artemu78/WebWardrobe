@@ -1,15 +1,28 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
 import { fetchGenerations, deleteGeneration } from '../store/generationsSlice';
 import { deleteSelfie } from '../store/userProfileSlice';
 import { Trash2, Download, ExternalLink, Loader2 } from 'lucide-react';
 import '../styles/Account.css';
+import { ConfirmationModal } from '../components/ConfirmationModal';
 
 const Account: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { user, status: userStatus } = useSelector((state: RootState) => state.userProfile);
     const { generations, status: genStatus } = useSelector((state: RootState) => state.generations);
+    
+    const [modalState, setModalState] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        action: (() => void) | null;
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        action: null
+    });
 
     useEffect(() => {
         if (user) {
@@ -17,47 +30,64 @@ const Account: React.FC = () => {
         }
     }, [dispatch, user]);
 
+    const closeModal = () => {
+        setModalState(prev => ({ ...prev, isOpen: false }));
+    };
+
+    const confirmAction = () => {
+        if (modalState.action) {
+            modalState.action();
+        }
+        closeModal();
+    };
+
+    const handleDeleteSelfie = (id: string, e: React.MouseEvent) => {
+        e.preventDefault(); 
+        setModalState({
+            isOpen: true,
+            title: 'Delete Selfie',
+            message: 'Are you sure you want to delete this selfie? This action cannot be undone.',
+            action: () => dispatch(deleteSelfie(id))
+        });
+    };
+
+    const handleDeleteGeneration = (jobId: string, e: React.MouseEvent) => {
+        e.preventDefault();
+        setModalState({
+            isOpen: true,
+            title: 'Delete Generated Image',
+            message: 'Are you sure you want to delete this generated image? This action cannot be undone.',
+            action: () => dispatch(deleteGeneration(jobId))
+        });
+    };
+
     if (!user) {
         const hasToken = localStorage.getItem('google_access_token');
         // If there is a token but no user, we are in a loading state (waiting for fetch)
         // If there is no token, we are not loading (showing sign in prompt)
         if (hasToken) {
              return (
-                <div className="account-container" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh'}}>
+                <div className="account-container account-loading">
                     <Loader2 className="animate-spin" size={32} />
                 </div>
             );
         }
 
         return (
-            <div className="account-container" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh'}}>
+            <div className="account-container account-loading">
                 <p>Please sign in to view your account.</p>
             </div>
         );
     }
 
-    const handleDeleteSelfie = (id: string, e: React.MouseEvent) => {
-        e.preventDefault(); 
-        if (confirm('Are you sure you want to delete this selfie?')) {
-            dispatch(deleteSelfie(id));
-        }
-    };
-
-    const handleDeleteGeneration = (jobId: string, e: React.MouseEvent) => {
-        e.preventDefault();
-        if (confirm('Are you sure you want to delete this generated image?')) {
-            dispatch(deleteGeneration(jobId));
-        }
-    };
-
     return (
         <div className="account-container">
             <div className="account-header">
                 <div>
-                    <h1 style={{fontSize: '2.5rem', marginBottom: '10px', color: 'var(--text-color)'}}>My Account</h1>
-                    <p style={{color: '#666'}}>Manage your profile, selfies, and generated styles.</p>
+                    <h1>My Account</h1>
+                    <p>Manage your profile, selfies, and generated styles.</p>
                 </div>
-                <a href="/#tariffs" className="credits-card" style={{textDecoration: 'none'}}>
+                <a href="/#tariffs" className="credits-card">
                     <div className="credits-count">{user.credits ?? 0}</div>
                     <div className="credits-label">Available Credits</div>
                 </a>
@@ -102,15 +132,15 @@ const Account: React.FC = () => {
             <section className="account-section">
                 <h2 className="section-title">Generated Images</h2>
                 {genStatus === 'loading' && generations.length === 0 ? (
-                    <div style={{display: 'flex', justifyContent: 'center', padding: '2rem'}}>
+                    <div className="loading-container">
                         <Loader2 className="animate-spin" size={32} />
                     </div>
                 ) : generations.length > 0 ? (
                     <div className="grid-container">
                         {generations.map((gen) => (
-                            <div key={gen.jobId} className="image-card">
+                            <div key={gen.jobId} className="image-card has-generation">
                                 <img src={gen.resultUrl} alt={gen.siteTitle} />
-                                <div className="card-overlay" style={{bottom: '60px'}}>
+                                <div className="card-overlay">
                                      <button 
                                         className="action-btn" 
                                         onClick={() => window.open(gen.resultUrl, '_blank')}
@@ -126,7 +156,7 @@ const Account: React.FC = () => {
                                         <Trash2 size={18} />
                                     </button>
                                 </div>
-                                <div className="generation-info" style={{transform: 'translateY(0)', position: 'absolute', bottom: 0, width: '100%', padding: '15px', background: 'white', borderTop: '1px solid #eee'}}>
+                                <div className="generation-info">
                                     <div className="generation-title" title={gen.siteTitle}>{gen.siteTitle || 'Generated Style'}</div>
                                     <a href={gen.itemUrl} target="_blank" rel="noopener noreferrer" className="generation-link">
                                         View Item <ExternalLink size={12} />
@@ -141,6 +171,14 @@ const Account: React.FC = () => {
                     </div>
                 )}
             </section>
+
+            <ConfirmationModal 
+                isOpen={modalState.isOpen}
+                title={modalState.title}
+                message={modalState.message}
+                onConfirm={confirmAction}
+                onCancel={closeModal}
+            />
         </div>
     );
 };
