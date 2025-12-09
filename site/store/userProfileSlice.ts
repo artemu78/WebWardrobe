@@ -1,10 +1,19 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { API_BASE_URL } from '../constants';
 
+export interface UserImage {
+    id: string;
+    s3Url: string;
+    thumbnailUrl?: string;
+    name?: string;
+}
+
 export interface User {
     name: string;
     picture: string;
     email?: string;
+    credits: number;
+    images: UserImage[];
 }
 
 interface UserProfileState {
@@ -49,6 +58,33 @@ export const fetchUserProfile = createAsyncThunk(
     }
 );
 
+export const deleteSelfie = createAsyncThunk(
+    'userProfile/deleteSelfie',
+    async (fileId: string, { rejectWithValue }) => {
+        const token = localStorage.getItem('google_access_token');
+        if (!token) {
+            return rejectWithValue('No token found');
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/user/images/${fileId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete selfie');
+            }
+
+            return fileId;
+        } catch (error: any) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
 const userProfileSlice = createSlice({
     name: 'userProfile',
     initialState,
@@ -78,6 +114,11 @@ const userProfileSlice = createSlice({
                 state.status = 'failed';
                 state.error = action.payload as string;
                 state.user = null;
+            })
+            .addCase(deleteSelfie.fulfilled, (state, action) => {
+                if (state.user) {
+                    state.user.images = state.user.images.filter(img => img.id !== action.payload);
+                }
             });
     },
 });
