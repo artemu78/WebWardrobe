@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { API_BASE_URL } from '../constants';
+import { fetchWithAuth } from '../utils/api';
 
 export interface Generation {
     jobId: string;
@@ -22,17 +22,13 @@ const initialState: GenerationsState = {
     error: null,
 };
 
+
+
 export const fetchGenerations = createAsyncThunk(
     'generations/fetchGenerations',
     async (_, { rejectWithValue }) => {
-        const token = localStorage.getItem('google_access_token');
-        if (!token) return rejectWithValue('No token found');
-
         try {
-            const response = await fetch(`${API_BASE_URL}/user/generations`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!response.ok) throw new Error('Failed to fetch generations');
+            const response = await fetchWithAuth('/user/generations');
             const data = await response.json();
             return data.generations as Generation[];
         } catch (error: any) {
@@ -44,15 +40,10 @@ export const fetchGenerations = createAsyncThunk(
 export const deleteGeneration = createAsyncThunk(
     'generations/deleteGeneration',
     async (jobId: string, { rejectWithValue }) => {
-        const token = localStorage.getItem('google_access_token');
-        if (!token) return rejectWithValue('No token found');
-        
         try {
-            const response = await fetch(`${API_BASE_URL}/user/generations/${jobId}`, {
+            await fetchWithAuth(`/user/generations/${jobId}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (!response.ok) throw new Error('Failed to delete generation');
             return jobId;
         } catch (error: any) {
             return rejectWithValue(error.message);

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { API_BASE_URL } from '../constants';
+import { fetchWithAuth } from '../utils/api';
 
 export interface UserImage {
     id: string;
@@ -28,28 +28,13 @@ const initialState: UserProfileState = {
     error: null,
 };
 
+
+
 export const fetchUserProfile = createAsyncThunk(
     'userProfile/fetchUserProfile',
     async (_, { rejectWithValue }) => {
-        const token = localStorage.getItem('google_access_token');
-        if (!token) {
-            return rejectWithValue('No token found');
-        }
-
         try {
-            const response = await fetch(`${API_BASE_URL}/user/profile`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                     localStorage.removeItem('google_access_token');
-                }
-                throw new Error('Failed to fetch user');
-            }
-
+            const response = await fetchWithAuth('/user/profile');
             const data = await response.json();
             return data as User;
         } catch (error: any) {
@@ -61,23 +46,10 @@ export const fetchUserProfile = createAsyncThunk(
 export const deleteSelfie = createAsyncThunk(
     'userProfile/deleteSelfie',
     async (fileId: string, { rejectWithValue }) => {
-        const token = localStorage.getItem('google_access_token');
-        if (!token) {
-            return rejectWithValue('No token found');
-        }
-
         try {
-            const response = await fetch(`${API_BASE_URL}/user/images/${fileId}`, {
+            await fetchWithAuth(`/user/images/${fileId}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
             });
-
-            if (!response.ok) {
-                throw new Error('Failed to delete selfie');
-            }
-
             return fileId;
         } catch (error: any) {
             return rejectWithValue(error.message);
