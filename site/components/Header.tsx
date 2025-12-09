@@ -59,10 +59,10 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
         <header>
             <nav>
                 <div className="nav-header">
-                    <div className="logo-container">
+                    <a href="/" className="logo-container" style={{textDecoration: 'none'}}>
                         <img src="/images/logo_48.png" alt="WebWardrobe Logo" style={{height: '32px'}} />
                         <div className="logo">WebWardrobe</div>
-                    </div>
+                    </a>
                     <button className="mobile-menu-btn" onClick={toggleMobileMenu} aria-label="Toggle menu">
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>

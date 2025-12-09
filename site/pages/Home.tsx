@@ -250,6 +250,23 @@ const Home: React.FC = () => {
             return () => window.removeEventListener('scroll', handleScroll);
         }
     }, []);
+
+    useEffect(() => {
+        if (window.location.hash) {
+            const element = document.querySelector(window.location.hash);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                 // Retry once after short delay for slower renders
+                 setTimeout(() => {
+                    const el = document.querySelector(window.location.hash);
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                 }, 500);
+            }
+        }
+    }, [lang, user]); // Re-run when content might have changed/loaded
+
+
     return (
         <div className="home-page">
             <section className="hero">

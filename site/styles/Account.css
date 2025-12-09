@@ -11,7 +11,7 @@
     align-items: center;
     margin-bottom: 3rem;
     padding-bottom: 2rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .credits-card {
@@ -20,6 +20,13 @@
     border-radius: 16px;
     color: white;
     box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+    cursor: pointer;
+    display: block;
+}
+
+.credits-card:hover {
+    transform: translateY(-5px);
 }
 
 .credits-count {
@@ -115,6 +122,10 @@
     background: rgba(255, 50, 50, 0.4);
 }
 
+.account-section {
+    margin-bottom: 4rem;
+}
+
 .empty-state {
     text-align: center;
     padding: 3rem;
@@ -164,5 +175,5 @@
 :root {
     --primary-color: #4F46E5;
     --secondary-color: #7C3AED;
-    --text-color: #1F2937;
+    --text-color: #aeaeae;
 }

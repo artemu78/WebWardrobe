@@ -46,10 +46,10 @@ const Account: React.FC = () => {
                     <h1 style={{fontSize: '2.5rem', marginBottom: '10px', color: 'var(--text-color)'}}>My Account</h1>
                     <p style={{color: '#666'}}>Manage your profile, selfies, and generated styles.</p>
                 </div>
-                <div className="credits-card">
+                <a href="/#tariffs" className="credits-card" style={{textDecoration: 'none'}}>
                     <div className="credits-count">{user.credits ?? 0}</div>
                     <div className="credits-label">Available Credits</div>
-                </div>
+                </a>
             </div>
 
             <section className="account-section">

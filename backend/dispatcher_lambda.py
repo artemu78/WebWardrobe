@@ -473,7 +473,8 @@ def profile_handler(event, context):
                     'picture': item.get('picture'),
                     'email': item.get('email'),
                     'credits': credits,
-                    'userId': item.get('userId')
+                    'userId': item.get('userId'),
+                    'images': item.get('images', [])
                 }, default=str)
             }
 
