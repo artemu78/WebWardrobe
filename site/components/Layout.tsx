@@ -1,31 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../store/store';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../store/store';
 import { fetchUserProfile } from '../store/userProfileSlice';
+import { setLanguage } from '../store/languageSlice';
 import { Header } from './Header';
-
-const translations: any = {
-    en: {
-        getExtension: "Get Extension",
-        howItWorks: "How It Works",
-        pricing: "Pricing",
-    },
-    ru: {
-        getExtension: "Скачать расширение",
-        howItWorks: "Как это работает",
-        pricing: "Цены",
-    },
-    de: {
-        getExtension: "Erweiterung holen",
-        howItWorks: "Wie es funktioniert",
-        pricing: "Preise",
-    },
-    es: {
-        getExtension: "Obtener extensión",
-        howItWorks: "Cómo funciona",
-        pricing: "Precios",
-    }
-};
+import { translations } from '../translations';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -33,7 +12,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
     const dispatch = useDispatch<AppDispatch>();
-    const [lang, setLang] = useState('en');
+    const { currentLang } = useSelector((state: RootState) => state.language);
 
     useEffect(() => {
         dispatch(fetchUserProfile());
@@ -43,17 +22,21 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         const urlParams = new URLSearchParams(window.location.search);
         const urlLang = urlParams.get('lang');
         const savedLang = localStorage.getItem('webwardrobe_lang');
-        let currentLang = 'en';
+        
+        let initialLang = 'en';
         if (urlLang && translations[urlLang]) {
-            currentLang = urlLang;
+            initialLang = urlLang;
         } else if (savedLang && translations[savedLang]) {
-            currentLang = savedLang;
+            initialLang = savedLang;
         }
-        setLang(currentLang);
-    }, []);
+        
+        if (initialLang !== currentLang) {
+            dispatch(setLanguage(initialLang));
+        }
+    }, [dispatch]); // Run once on mount to set initial language
 
     const handleLangChange = (newLang: string) => {
-        setLang(newLang);
+        dispatch(setLanguage(newLang));
         localStorage.setItem('webwardrobe_lang', newLang);
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.set('lang', newLang);
@@ -64,7 +47,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <>
             <Header 
                 translations={translations} 
-                lang={lang} 
+                lang={currentLang} 
                 onLangChange={handleLangChange} 
             />
             {children}

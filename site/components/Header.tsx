@@ -107,19 +107,19 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
                                             className="dropdown-link"
                                             onClick={() => setIsDropdownOpen(false)}
                                         >
-                                            Account
+                                            {t('account')}
                                         </Link>
                                         <button 
                                             onClick={handleSignOut}
                                             className="btn-primary dropdown-btn"
                                         >
-                                            Sign out
+                                            {t('signOut')}
                                         </button>
                                     </div>
                                 )}
                             </div>
                         ) : (
-                            <button onClick={handleLogin} className="btn-secondary" style={{border: 'none', cursor: 'pointer'}}>Sign in</button>
+                            <button onClick={handleLogin} className="btn-secondary" style={{border: 'none', cursor: 'pointer'}}>{t('signIn')}</button>
                         )}
                     </div>
                 </div>

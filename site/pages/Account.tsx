@@ -6,11 +6,19 @@ import { deleteSelfie } from '../store/userProfileSlice';
 import { Trash2, Download, ExternalLink, Loader2 } from 'lucide-react';
 import '../styles/Account.css';
 import { ConfirmationModal } from '../components/ConfirmationModal';
+import { translations } from '../translations';
 
 const Account: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { user, status: userStatus } = useSelector((state: RootState) => state.userProfile);
     const { generations, status: genStatus } = useSelector((state: RootState) => state.generations);
+    const { currentLang: lang } = useSelector((state: RootState) => state.language);
+    
+
+
+    const t = (key: string) => {
+        return (translations[lang]?.[key] ?? key).toString();
+    };
     
     const [modalState, setModalState] = useState<{
         isOpen: boolean;
@@ -63,8 +71,8 @@ const Account: React.FC = () => {
         e.preventDefault(); 
         setModalState({
             isOpen: true,
-            title: 'Delete Selfie',
-            message: 'Are you sure you want to delete this selfie? This action cannot be undone.',
+            title: t('deleteSelfieTitle'),
+            message: t('deleteSelfieMsg'),
             action: () => dispatch(deleteSelfie(id))
         });
     };
@@ -73,8 +81,8 @@ const Account: React.FC = () => {
         e.preventDefault();
         setModalState({
             isOpen: true,
-            title: 'Delete Generated Image',
-            message: 'Are you sure you want to delete this generated image? This action cannot be undone.',
+            title: t('deleteGenTitle'),
+            message: t('deleteGenMsg'),
             action: () => dispatch(deleteGeneration(jobId))
         });
     };
@@ -93,7 +101,7 @@ const Account: React.FC = () => {
 
         return (
             <div className="account-container account-loading">
-                <p>Please sign in to view your account.</p>
+                 <p>{t('signInPrompt')}</p>
             </div>
         );
     }
@@ -102,17 +110,17 @@ const Account: React.FC = () => {
         <div className="account-container">
             <div className="account-header">
                 <div>
-                    <h1>My Account</h1>
-                    <p>Manage your profile, selfies, and generated styles.</p>
+                    <h1>{t('myAccount')}</h1>
+                    <p>{t('manageProfile')}</p>
                 </div>
                 <a href="/#tariffs" className="credits-card">
                     <div className="credits-count">{user.credits ?? 0}</div>
-                    <div className="credits-label">Available Credits</div>
+                    <div className="credits-label">{t('availableCredits')}</div>
                 </a>
             </div>
 
             <section className="account-section">
-                <h2 className="section-title">Your Selfies</h2>
+                <h2 className="section-title">{t('yourSelfies')}</h2>
                 {user.images && user.images.length > 0 ? (
                     <div className="grid-container">
                         {user.images.map((image) => (
@@ -125,14 +133,15 @@ const Account: React.FC = () => {
                                             e.preventDefault();
                                             handleDownload(image.s3Url, image.name || `selfie-${image.id}.jpg`);
                                         }}
-                                        title="Download"
+
+                                        title={t('download')}
                                     >
                                         <Download size={18} />
                                     </button>
                                     <button 
                                         className="action-btn delete" 
                                         onClick={(e) => handleDeleteSelfie(image.id, e)}
-                                        title="Delete"
+                                        title={t('delete')}
                                     >
                                         <Trash2 size={18} />
                                     </button>
@@ -142,13 +151,13 @@ const Account: React.FC = () => {
                     </div>
                 ) : (
                     <div className="empty-state">
-                        <p>No selfies uploaded yet. Use the extension to upload your first selfie!</p>
+                        <p>{t('noSelfies')}</p>
                     </div>
                 )}
             </section>
 
             <section className="account-section">
-                <h2 className="section-title">Generated Images</h2>
+                <h2 className="section-title">{t('generatedImages')}</h2>
                 {genStatus === 'loading' && generations.length === 0 ? (
                     <div className="loading-container">
                         <Loader2 className="animate-spin" size={32} />
@@ -165,14 +174,14 @@ const Account: React.FC = () => {
                                             e.preventDefault();
                                             handleDownload(gen.resultUrl, `generation-${gen.jobId}.jpg`);
                                         }}
-                                        title="Download"
+                                        title={t('download')}
                                     >
                                         <Download size={18} />
                                     </button>
                                     <button 
                                         className="action-btn delete" 
                                         onClick={(e) => handleDeleteGeneration(gen.jobId, e)}
-                                        title="Delete"
+                                        title={t('delete')}
                                     >
                                         <Trash2 size={18} />
                                     </button>
@@ -180,7 +189,7 @@ const Account: React.FC = () => {
                                 <div className="generation-info">
                                     <div className="generation-title" title={gen.siteTitle}>{gen.siteTitle || 'Generated Style'}</div>
                                     <a href={gen.itemUrl} target="_blank" rel="noopener noreferrer" className="generation-link">
-                                        View Item <ExternalLink size={12} />
+                                        {t('viewItem')} <ExternalLink size={12} />
                                     </a>
                                 </div>
                             </div>
@@ -188,7 +197,7 @@ const Account: React.FC = () => {
                     </div>
                 ) : (
                     <div className="empty-state">
-                        <p>No generated images yet. Start using the extension to create your looks!</p>
+                        <p>{t('noGenerations')}</p>
                     </div>
                 )}
             </section>
