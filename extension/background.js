@@ -108,14 +108,33 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         });
       }
     });
-  } else if (info.menuItemId === "login-required" || info.menuItemId === "no-images") {
-    // Open popup or options?
-    // We can't programmatically open popup. We can alert or notify.
+  } else if (info.menuItemId === "login-required") {
+    // Attempt to log the user in interactively
+    chrome.identity.getAuthToken({ interactive: true }, function (token) {
+      if (chrome.runtime.lastError || !token) {
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('logo.jpg'),
+          title: 'Login Failed',
+          message: 'Please open the extension popup to sign in.'
+        });
+      } else {
+        // Success
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('logo.jpg'),
+          title: 'Login Successful',
+          message: 'You can now use the context menu to try on clothes.'
+        });
+        refreshContextMenu();
+      }
+    });
+  } else if (info.menuItemId === "no-images") {
     chrome.notifications.create({
       type: 'basic',
       iconUrl: chrome.runtime.getURL('logo.jpg'),
-      title: 'WebWardrobe',
-      message: 'Please open the extension popup to setup your profile.'
+      title: 'No Selfies Found',
+      message: 'Please open the extension popup to upload a selfie first.'
     });
   }
 });
