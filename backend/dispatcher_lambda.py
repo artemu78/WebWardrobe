@@ -561,7 +561,7 @@ def profile_handler(event, context):
             
             return {
                 'statusCode': 200,
-                'body': json.dumps({'message': 'Image saved', 'id': file_id, 'url': s3_url})
+                'body': json.dumps(new_image_item)
             }
 
         # GET /user/images
