@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL, chromeStoreUrl } from '../constants';
 
-
+import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
@@ -131,24 +131,15 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
                                                 {user.email}
                                             </div>
                                         )}
-                                        <a href="/account" style={{
-                                            display: 'block',
-                                            width: '100%',
-                                            padding: '10px 12px',
-                                            color: '#333',
-                                            textDecoration: 'none',
-                                            fontSize: '14px',
-                                            fontWeight: 600,
-                                            borderRadius: '4px',
-                                            marginBottom: '4px',
-                                            boxSizing: 'border-box',
-                                            cursor: 'pointer'
-                                        }}
-                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                                        <Link 
+                                            to="/account" 
+                                            className="dropdown-link"
+                                            onClick={() => setIsDropdownOpen(false)}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
                                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
-                                            Account
-                                        </a>
+                                            {t('account')}
+                                        </Link>
                                         <button 
                                             onClick={handleSignOut}
                                             className="btn-primary"
@@ -162,13 +153,13 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
                                                 fontWeight: 600
                                             }}
                                         >
-                                            Sign out
+                                            {t('signOut')}
                                         </button>
                                     </div>
                                 )}
                             </div>
                         ) : (
-                            <button onClick={handleLogin} className="btn-secondary" style={{border: 'none', cursor: 'pointer'}}>Sign in</button>
+                            <button onClick={handleLogin} className="btn-secondary" style={{border: 'none', cursor: 'pointer'}}>{t('signIn')}</button>
                         )}
                     </div>
                 </div>

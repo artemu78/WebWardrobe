@@ -18,6 +18,8 @@ describe('userProfileSlice', () => {
         name: 'Test User',
         picture: 'test.jpg',
         email: 'test@example.com',
+        credits: 10,
+        images: []
     };
 
     it('should handle initial state', () => {

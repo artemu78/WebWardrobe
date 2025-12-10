@@ -1,21 +1,91 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
 import { fetchGenerations, deleteGeneration } from '../store/generationsSlice';
 import { deleteSelfie } from '../store/userProfileSlice';
 import { Trash2, Download, ExternalLink, Loader2 } from 'lucide-react';
 import '../styles/Account.css';
+import { ConfirmationModal } from '../components/ConfirmationModal.tsx';
+import { translations } from '../translations';
 
 const Account: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { user, status: userStatus } = useSelector((state: RootState) => state.userProfile);
     const { generations, status: genStatus } = useSelector((state: RootState) => state.generations);
+    const { currentLang: lang } = useSelector((state: RootState) => state.language);
+    
+
+
+    const t = (key: string) => {
+        return (translations[lang]?.[key] ?? key).toString();
+    };
+    
+    const [modalState, setModalState] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        action: (() => void) | null;
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        action: null
+    });
 
     useEffect(() => {
         if (user) {
             dispatch(fetchGenerations());
         }
     }, [dispatch, user]);
+
+    const closeModal = () => {
+        setModalState(prev => ({ ...prev, isOpen: false }));
+    };
+
+    const confirmAction = () => {
+        if (modalState.action) {
+            modalState.action();
+        }
+        closeModal();
+    };
+
+    const handleDownload = async (url: string, filename: string) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('Download failed:', error);
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+    };
+
+    const handleDeleteSelfie = (id: string, e: React.MouseEvent) => {
+        e.preventDefault(); 
+        setModalState({
+            isOpen: true,
+            title: t('deleteSelfieTitle'),
+            message: t('deleteSelfieMsg'),
+            action: () => dispatch(deleteSelfie(id))
+        });
+    };
+
+    const handleDeleteGeneration = (jobId: string, e: React.MouseEvent) => {
+        e.preventDefault();
+        setModalState({
+            isOpen: true,
+            title: t('deleteGenTitle'),
+            message: t('deleteGenMsg'),
+            action: () => dispatch(deleteGeneration(jobId))
+        });
+    };
 
     if (!user) {
         const hasToken = localStorage.getItem('google_access_token');
@@ -30,41 +100,29 @@ const Account: React.FC = () => {
         }
 
         return (
-            <div className="account-container" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh'}}>
-                <p>Please sign in to view your account.</p>
+            <div className="account-container account-loading">
+                 <p>{t('signInPrompt')}</p>
             </div>
         );
     }
 
-    const handleDeleteSelfie = (id: string, e: React.MouseEvent) => {
-        e.preventDefault(); 
-        if (confirm('Are you sure you want to delete this selfie?')) {
-            dispatch(deleteSelfie(id));
-        }
-    };
 
-    const handleDeleteGeneration = (jobId: string, e: React.MouseEvent) => {
-        e.preventDefault();
-        if (confirm('Are you sure you want to delete this generated image?')) {
-            dispatch(deleteGeneration(jobId));
-        }
-    };
 
     return (
         <div className="account-container">
             <div className="account-header">
                 <div>
-                    <h1 style={{fontSize: '2.5rem', marginBottom: '10px', color: 'var(--text-color)'}}>My Account</h1>
-                    <p style={{color: '#666'}}>Manage your profile, selfies, and generated styles.</p>
+                    <h1 style={{fontSize: '2.5rem', marginBottom: '10px', color: 'var(--text-color)'}}>{t('myAccount')}</h1>
+                    <p style={{color: '#666'}}>{t('manageProfile')}</p>
                 </div>
                 <a href="/#tariffs" className="credits-card" style={{textDecoration: 'none'}}>
                     <div className="credits-count">{user.credits ?? 0}</div>
-                    <div className="credits-label">Available Credits</div>
+                    <div className="credits-label">{t('availableCredits')}</div>
                 </a>
             </div>
 
             <section className="account-section">
-                <h2 className="section-title">Your Selfies</h2>
+                <h2 className="section-title">{t('yourSelfies')}</h2>
                 {user.images && user.images.length > 0 ? (
                     <div className="grid-container">
                         {user.images.map((image) => (
@@ -77,14 +135,15 @@ const Account: React.FC = () => {
                                             e.preventDefault();
                                             window.open(image.s3Url, '_blank');
                                         }}
-                                        title="Download"
+
+                                        title={t('download')}
                                     >
                                         <Download size={18} />
                                     </button>
                                     <button 
                                         className="action-btn delete" 
                                         onClick={(e) => handleDeleteSelfie(image.id, e)}
-                                        title="Delete"
+                                        title={t('delete')}
                                     >
                                         <Trash2 size={18} />
                                     </button>
@@ -94,13 +153,13 @@ const Account: React.FC = () => {
                     </div>
                 ) : (
                     <div className="empty-state">
-                        <p>No selfies uploaded yet. Use the extension to upload your first selfie!</p>
+                        <p>{t('noSelfies')}</p>
                     </div>
                 )}
             </section>
 
             <section className="account-section">
-                <h2 className="section-title">Generated Images</h2>
+                <h2 className="section-title">{t('generatedImages')}</h2>
                 {genStatus === 'loading' && generations.length === 0 ? (
                     <div style={{display: 'flex', justifyContent: 'center', padding: '2rem'}}>
                         <Loader2 className="animate-spin" size={32} />
@@ -113,15 +172,18 @@ const Account: React.FC = () => {
                                 <div className="card-overlay" style={{bottom: '60px'}}>
                                      <button 
                                         className="action-btn" 
-                                        onClick={() => window.open(gen.resultUrl, '_blank')}
-                                        title="Download"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleDownload(gen.resultUrl, `generation-${gen.jobId}.jpg`);
+                                        }}
+                                        title={t('download')}
                                     >
                                         <Download size={18} />
                                     </button>
                                     <button 
                                         className="action-btn delete" 
                                         onClick={(e) => handleDeleteGeneration(gen.jobId, e)}
-                                        title="Delete"
+                                        title={t('delete')}
                                     >
                                         <Trash2 size={18} />
                                     </button>
@@ -129,7 +191,7 @@ const Account: React.FC = () => {
                                 <div className="generation-info" style={{transform: 'translateY(0)', position: 'absolute', bottom: 0, width: '100%', padding: '15px', background: 'white', borderTop: '1px solid #eee'}}>
                                     <div className="generation-title" title={gen.siteTitle}>{gen.siteTitle || 'Generated Style'}</div>
                                     <a href={gen.itemUrl} target="_blank" rel="noopener noreferrer" className="generation-link">
-                                        View Item <ExternalLink size={12} />
+                                        {t('viewItem')} <ExternalLink size={12} />
                                     </a>
                                 </div>
                             </div>
@@ -137,12 +199,20 @@ const Account: React.FC = () => {
                     </div>
                 ) : (
                     <div className="empty-state">
-                        <p>No generated images yet. Start using the extension to create your looks!</p>
+                        <p>{t('noGenerations')}</p>
                     </div>
                 )}
             </section>
-        </div>
-    );
+
+        <ConfirmationModal
+            isOpen={modalState.isOpen}
+            onClose={closeModal}
+            onConfirm={confirmAction}
+            title={modalState.title}
+            message={modalState.message}
+        />
+    </div>
+);
 };
 
 export default Account;
