@@ -73,6 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const genList = document.getElementById('generated-images-list');
     if (genList) genList.innerHTML = '';
+
+    // Refresh context menu to ensure it reflects logout state
+    chrome.runtime.sendMessage({ action: "refreshContextMenu" });
   }
 
   // Modal Logic
@@ -181,6 +184,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadImages(token);
     // Also load generated images
     loadGeneratedImages(token);
+
+    // Refresh context menu to ensure it reflects login state
+    chrome.runtime.sendMessage({ action: "refreshContextMenu" });
 
 
     document.getElementById('generated-section-title').addEventListener('dblclick', () => {
