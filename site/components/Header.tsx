@@ -6,6 +6,7 @@ import { Menu, X } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store/store';
 import { fetchUserProfile, clearUser } from '../store/userProfileSlice';
+import '../styles/Header.css';
 
 interface HeaderProps {
     translations: any;
@@ -25,9 +26,9 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
         const redirectUri = `${origin}/login_callback`;
         const scope = "email profile openid";
         const responseType = "token";
-        
+
         const authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${encodeURIComponent(scope)}`;
-        
+
         window.location.href = authUrl;
     };
 
@@ -59,15 +60,15 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
         <header>
             <nav>
                 <div className="nav-header">
-                    <a href="/" className="logo-container" style={{textDecoration: 'none'}}>
-                        <img src="/images/logo_48.png" alt="WebWardrobe Logo" style={{height: '32px'}} />
+                    <a href="/" className="logo-container" style={{ textDecoration: 'none' }}>
+                        <img src="/images/logo_48.png" alt="WebWardrobe Logo" style={{ height: '32px' }} />
                         <div className="logo">WebWardrobe</div>
                     </a>
                     <button className="mobile-menu-btn" onClick={toggleMobileMenu} aria-label="Toggle menu">
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
                 </div>
-                
+
                 <div className={`nav-content ${isMobileMenuOpen ? 'open' : ''}`}>
                     <ul className="nav-links">
                         <li><a href="/#how-it-works" onClick={() => setIsMobileMenuOpen(false)}>{t('howItWorks')}</a></li>
@@ -82,14 +83,14 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
                         </select>
                         <a href={chromeStoreUrl(lang)} className="btn-primary" target="_blank" rel="noopener noreferrer">{t('getExtension')}</a>
                         {user ? (
-                            <div style={{position: 'relative'}}>
-                                <div 
+                            <div style={{ position: 'relative' }}>
+                                <div
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                     className="btn-secondary"
                                     style={{
-                                        display: 'flex', 
-                                        alignItems: 'center', 
-                                        gap: '8px', 
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
                                         cursor: 'pointer',
                                         padding: '10px 20px',
                                         border: '2px solid var(--primary-color)',
@@ -99,59 +100,31 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
                                         fontWeight: 600
                                     }}
                                 >
-                                    <span style={{fontSize: '14px', color: 'white'}}>{user.name}</span>
+                                    <span style={{ fontSize: '14px', color: 'white' }}>{user.name}</span>
                                     {user.picture ? (
-                                        <img src={user.picture} alt="Avatar" style={{width: '24px', height: '24px', borderRadius: '50%'}} />
+                                        <img src={user.picture} alt="Avatar" style={{ width: '24px', height: '24px', borderRadius: '50%' }} />
                                     ) : (
-                                        <div style={{width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#ccc'}}></div>
+                                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#ccc' }}></div>
                                     )}
                                 </div>
                                 {isDropdownOpen && (
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '100%',
-                                        right: 0,
-                                        marginTop: '8px',
-                                        backgroundColor: 'white',
-                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                        borderRadius: '8px',
-                                        padding: '8px',
-                                        zIndex: 100,
-                                        minWidth: '200px'
-                                    }}>
+                                    <div className="dropdown-menu">
                                         {user.email && (
-                                            <div style={{
-                                                padding: '8px 12px', 
-                                                fontSize: '12px', 
-                                                color: '#666', 
-                                                borderBottom: '1px solid #eee', 
-                                                marginBottom: '8px',
-                                                wordBreak: 'break-all'
-                                            }}>
+                                            <div className="dropdown-user-email">
                                                 {user.email}
                                             </div>
                                         )}
-                                        <Link 
-                                            to="/account" 
+                                        <Link
+                                            to="/account"
                                             className="dropdown-link"
                                             onClick={() => setIsDropdownOpen(false)}
-                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
-                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
                                             {t('account')}
                                         </Link>
-                                        <button 
+                                        <div className="dropdown-divider"></div>
+                                        <button
                                             onClick={handleSignOut}
-                                            className="btn-primary"
-                                            style={{
-                                                width: '100%',
-                                                padding: '10px 20px',
-                                                border: 'none',
-                                                borderRadius: '30px',
-                                                cursor: 'pointer',
-                                                fontSize: '14px',
-                                                fontWeight: 600
-                                            }}
+                                            className="dropdown-button"
                                         >
                                             {t('signOut')}
                                         </button>
@@ -159,7 +132,7 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
                                 )}
                             </div>
                         ) : (
-                            <button onClick={handleLogin} className="btn-secondary" style={{border: 'none', cursor: 'pointer'}}>{t('signIn')}</button>
+                            <button onClick={handleLogin} className="btn-secondary" style={{ border: 'none', cursor: 'pointer' }}>{t('signIn')}</button>
                         )}
                     </div>
                 </div>

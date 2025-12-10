@@ -1,0 +1,71 @@
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 8px;
+    z-index: 100;
+    min-width: 200px;
+}
+
+.dropdown-user-email {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #666;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 8px;
+    word-break: break-all;
+}
+
+.dropdown-link,
+.dropdown-button {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #333;
+    text-decoration: none;
+    text-align: left;
+    background: transparent;
+    border: none;
+    border-radius: 4px; /* Optional: softer corners on hover */
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    box-sizing: border-box;
+    font-family: inherit; /* Inherit font from parent */
+}
+
+.dropdown-link:hover,
+.dropdown-button:hover {
+    background-color: #f3f4f6;
+    color: #000;
+}
+
+.dropdown-button.sign-out {
+    margin-top: 4px;
+    border-top: 1px solid #f0f0f0;
+    border-radius: 0 0 4px 4px; /* Adjust if needed, or keep generic */
+    /* Actually, a border on the button itself might look weird if it has padding and hover. 
+       Better to have a separator element or use margin/border on a container?
+       Or just padding-top with a border. 
+       Let's stick to standard behavior: if using border-top, correct for padding.
+    */
+    padding-top: 10px; /* Reset padding */
+    border-radius: 4px; /* Reset radius */
+}
+
+/* User asked for separate with subtle delimiter. 
+   Option 1: <hr> 
+   Option 2: border-top on the second item.
+   Let's do a separator class or just add a border to the sign-out button.
+*/
+
+.dropdown-divider {
+    height: 1px;
+    background-color: #eee;
+    margin: 4px 0;
+}
