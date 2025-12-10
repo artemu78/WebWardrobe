@@ -58,7 +58,16 @@ export const translations: any = {
         signIn: "Sign in",
         confirm: "Confirm",
         cancel: "Cancel",
-        close: "Close"
+        close: "Close",
+        // Upload
+        uploadSelfie: "Upload New Selfie",
+        dropImageHere: "Drop image here or click to upload",
+        browseFiles: "Browse Files",
+        imageName: "Name your selfie (e.g., 'Casual')",
+        upload: "Upload",
+        processing: "Processing...",
+        uploadComplete: "Upload Complete!",
+        errorUploading: "Error uploading image"
     },
     ru: {
         getExtension: "Скачать расширение",
@@ -119,7 +128,16 @@ export const translations: any = {
         signIn: "Войти",
         confirm: "Подтвердить",
         cancel: "Отмена",
-        close: "Закрыть"
+        close: "Закрыть",
+        // Upload
+        uploadSelfie: "Загрузить новое селфи",
+        dropImageHere: "Перетащите фото сюда или кликните",
+        browseFiles: "Выбрать файл",
+        imageName: "Название (например, 'Кэжуал')",
+        upload: "Загрузить",
+        processing: "Обработка...",
+        uploadComplete: "Загрузка завершена!",
+        errorUploading: "Ошибка загрузки"
     },
     de: {
         getExtension: "Erweiterung holen",
@@ -180,7 +198,16 @@ export const translations: any = {
         signIn: "Anmelden",
         confirm: "Bestätigen",
         cancel: "Abbrechen",
-        close: "Schließen"
+        close: "Schließen",
+        // Upload
+        uploadSelfie: "Neues Selfie hochladen",
+        dropImageHere: "Bild hier ablegen oder klicken",
+        browseFiles: "Dateien durchsuchen",
+        imageName: "Name (z.B. 'Casual')",
+        upload: "Hochladen",
+        processing: "Verarbeitung...",
+        uploadComplete: "Hochladen abgeschlossen!",
+        errorUploading: "Fehler beim Hochladen"
 
     },
     es: {
@@ -242,6 +269,15 @@ export const translations: any = {
         signIn: "Iniciar sesión",
         confirm: "Confirmar",
         cancel: "Cancelar",
-        close: "Cerrar"
+        close: "Cerrar",
+        // Upload
+        uploadSelfie: "Subir Nuevo Selfie",
+        dropImageHere: "Suelta la imagen aquí o haz clic",
+        browseFiles: "Buscar Archivos",
+        imageName: "Nombre (ej. 'Casual')",
+        upload: "Subir",
+        processing: "Procesando...",
+        uploadComplete: "¡Subida completada!",
+        errorUploading: "Error al subir la imagen"
     }
 };

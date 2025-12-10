@@ -177,3 +177,165 @@
     --secondary-color: #7C3AED;
     --text-color: #aeaeae;
 }
+
+/* Upload Section */
+.upload-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    display: flex; /* Flex row */
+    gap: 2rem; /* Spacing between columns */
+    align-items: stretch; /* Ensure same height */
+}
+
+.drop-zone {
+    flex: 1; /* Take 1 part (approx 50% with gap) */
+    border: 2px dashed #e5e7eb;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f9fafb;
+    margin-bottom: 0; /* Remove bottom margin */
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.drop-zone:hover {
+    border-color: var(--primary-color);
+    background: #f3f4f6;
+}
+
+.drop-zone.has-preview {
+    padding: 0;
+    border: none;
+    background: none;
+    overflow: hidden; /* Ensure image respects radius */
+}
+
+.hidden-input {
+    display: none;
+}
+
+.drop-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: #6b7280;
+}
+
+.upload-icon-wrapper {
+    position: relative;
+    color: var(--primary-color);
+}
+
+.plus-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background: white;
+    border-radius: 50%;
+    padding: 2px;
+}
+
+.browse-btn {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.preview-container {
+    position: relative;
+    width: 100%;
+    height: 100%; /* Fill parent */
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f0f0f0;
+}
+
+.upload-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Cover usually looks better for selfies, or contain if needed */
+}
+
+.remove-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none; 
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    color: #ef4444; 
+    z-index: 10;
+}
+
+.remove-btn:hover {
+    background: white;
+    transform: scale(1.1);
+}
+
+.upload-controls {
+    flex: 1; /* Take 1 part (approx 50% with gap) */
+    display: flex;
+    flex-direction: column; /* Column layout */
+    gap: 1rem;
+    justify-content: center; /* Center content vertically if needed, or stretch */
+}
+
+.name-input {
+    width: 100%; /* Whole space of container */
+    padding: 0.75rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+}
+
+.name-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.upload-submit-btn {
+    width: 100%; /* Whole space of container */
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem; /* Match input padding height roughly */
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-submit-btn:hover:not(:disabled) {
+    background: var(--secondary-color);
+}
+
+.upload-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: #ef4444;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}

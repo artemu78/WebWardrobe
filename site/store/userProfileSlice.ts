@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { API_BASE_URL } from '../constants';
+import { resizeImage } from '../lib/imageUtils';
 
 export interface UserImage {
     id: string;
@@ -85,6 +86,76 @@ export const deleteSelfie = createAsyncThunk(
     }
 );
 
+interface UploadSelfiePayload {
+    name: string;
+    file: File;
+}
+
+export const uploadSelfie = createAsyncThunk(
+    'userProfile/uploadSelfie',
+    async ({ name, file }: UploadSelfiePayload, { rejectWithValue }) => {
+        const token = localStorage.getItem('google_access_token');
+        if (!token) {
+            return rejectWithValue('No token found');
+        }
+
+        try {
+            const thumbnailBlob = await resizeImage(file, 48, 48);
+
+            const res1 = await fetch(`${API_BASE_URL}/user/images/upload-url`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    filename: file.name,
+                    contentType: file.type,
+                    includeThumbnail: true
+                })
+            });
+
+            if (!res1.ok) {
+                const data1 = await res1.json();
+                throw new Error(data1.error || 'Failed to get upload URL');
+            }
+
+            const data1 = await res1.json();
+
+            await fetch(data1.uploadUrl, {
+                method: 'PUT',
+                body: file,
+                headers: { 'Content-Type': file.type }
+            });
+
+            await fetch(data1.thumbnailUploadUrl, {
+                method: 'PUT',
+                body: thumbnailBlob,
+                headers: { 'Content-Type': file.type }
+            });
+
+            const res3 = await fetch(`${API_BASE_URL}/user/images`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    s3Key: data1.s3Key,
+                    fileId: data1.fileId,
+                    thumbnailS3Key: data1.thumbnailS3Key
+                })
+            });
+
+            if (!res3.ok) {
+                const err = await res3.json();
+                throw new Error(err.error || 'Failed to save profile');
+            }
+
+            const newImage = await res3.json();
+            return newImage as UserImage;
+
+        } catch (error: any) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
 const userProfileSlice = createSlice({
     name: 'userProfile',
     initialState,
@@ -119,6 +190,20 @@ const userProfileSlice = createSlice({
                 if (state.user) {
                     state.user.images = state.user.images.filter(img => img.id !== action.payload);
                 }
+            })
+            .addCase(uploadSelfie.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(uploadSelfie.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                if (state.user) {
+                   // Append the new image. Check if it's already there to be safe (though unexpected)
+                   state.user.images.push(action.payload);
+                }
+            })
+            .addCase(uploadSelfie.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload as string;
             });
     },
 });
