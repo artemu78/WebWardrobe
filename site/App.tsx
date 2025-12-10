@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import InstallationGuide from './pages/InstallationGuide';
+import Account from './pages/Account';
 import { Layout } from './components/Layout';
 
 import { GoogleOAuthProvider } from '@react-oauth/google';
@@ -17,6 +18,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/install" element={<InstallationGuide />} />
+            <Route path="/account" element={<Account />} />
             <Route path="/login_callback" element={<LoginCallback />} />
             <Route path="/login_callback/*" element={<LoginCallback />} />
           </Routes>

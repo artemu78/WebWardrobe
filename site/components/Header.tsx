@@ -59,10 +59,10 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
         <header>
             <nav>
                 <div className="nav-header">
-                    <div className="logo-container">
+                    <a href="/" className="logo-container" style={{textDecoration: 'none'}}>
                         <img src="/images/logo_48.png" alt="WebWardrobe Logo" style={{height: '32px'}} />
                         <div className="logo">WebWardrobe</div>
-                    </div>
+                    </a>
                     <button className="mobile-menu-btn" onClick={toggleMobileMenu} aria-label="Toggle menu">
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
@@ -131,6 +131,24 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
                                                 {user.email}
                                             </div>
                                         )}
+                                        <a href="/account" style={{
+                                            display: 'block',
+                                            width: '100%',
+                                            padding: '10px 12px',
+                                            color: '#333',
+                                            textDecoration: 'none',
+                                            fontSize: '14px',
+                                            fontWeight: 600,
+                                            borderRadius: '4px',
+                                            marginBottom: '4px',
+                                            boxSizing: 'border-box',
+                                            cursor: 'pointer'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                            Account
+                                        </a>
                                         <button 
                                             onClick={handleSignOut}
                                             className="btn-primary"

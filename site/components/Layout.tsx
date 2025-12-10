@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../store/store';
+import { fetchUserProfile } from '../store/userProfileSlice';
 import { Header } from './Header';
 
 const translations: any = {
@@ -29,7 +32,12 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
+    const dispatch = useDispatch<AppDispatch>();
     const [lang, setLang] = useState('en');
+
+    useEffect(() => {
+        dispatch(fetchUserProfile());
+    }, [dispatch]);
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);

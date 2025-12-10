@@ -1,0 +1,41 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="paint0_linear" x1="50" y1="50" x2="462" y2="462" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Hanger Hook -->
+  <path d="M256 96 C256 60, 296 60, 296 96 C296 116, 280 128, 270 150" 
+        stroke="url(#paint0_linear)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- Hanger Shoulders -->
+  <path d="M270 150 L380 200 C430 220, 440 260, 420 300 C410 320, 390 320, 370 320" 
+        stroke="url(#paint0_linear)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        
+  <path d="M270 150 L132 200 C82 220, 72 260, 92 300 C102 320, 122 320, 142 320" 
+        stroke="url(#paint0_linear)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Circuit Lines (replacing bottom bar) -->
+  <!-- Top circuit line -->
+  <circle cx="340" cy="240" r="12" fill="url(#paint0_linear)"/>
+  <path d="M340 240 L280 280 L180 280" 
+        stroke="url(#paint0_linear)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+        
+  <!-- Middle circuit line -->
+  <circle cx="360" cy="320" r="12" fill="url(#paint0_linear)"/>
+  <path d="M360 320 L240 320" 
+        stroke="url(#paint0_linear)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+        
+  <!-- Bottom circuit line -->
+  <circle cx="230" cy="360" r="12" fill="url(#paint0_linear)"/>
+  <path d="M230 360 L280 360 L320 320" 
+        stroke="url(#paint0_linear)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Digital Dots (left side fade out) -->
+  <circle cx="150" cy="280" r="10" fill="url(#paint0_linear)"/>
+  <circle cx="120" cy="290" r="8" fill="url(#paint0_linear)" opacity="0.8"/>
+  <circle cx="160" cy="310" r="7" fill="url(#paint0_linear)" opacity="0.8"/>
+  <circle cx="130" cy="330" r="6" fill="url(#paint0_linear)" opacity="0.6"/>
+</svg>
