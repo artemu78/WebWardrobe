@@ -66,6 +66,7 @@ function compressAssets() {
 
   // Add the icons folder and dist folder recursively
   archive.directory('icons/', 'icons');
+  archive.directory('lib/', 'lib');
   // archive.directory('dist/', 'dist');
 
   // Finalize the archive (i.e., finish writing the zip file)

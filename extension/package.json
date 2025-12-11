@@ -5,6 +5,7 @@
   "main": "archive.js",
   "scripts": {
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "build:css": "tailwindcss -i ./input.css -o ./style.css"
   },
   "keywords": [],

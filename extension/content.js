@@ -14,10 +14,23 @@ if (window.webWardrobeContentScriptInjected) {
     const { action, originalUrl, resultUrl, error } = request;
 
     // Find all images with the matching src
-    const images = document.querySelectorAll('img');
+    const images = Array.from(document.querySelectorAll('img'));
+
+    // Helper to normalize URLs for comparison
+    const normalizeUrl = (url) => {
+      try {
+        return decodeURIComponent(url).split('?')[0]; // Compare base URL without params as fallback?
+      } catch (e) {
+        return url;
+      }
+    };
 
     for (let img of images) {
-      if (img.src === originalUrl) {
+      // Robust matching: exact match OR decoded match
+      const match = img.src === originalUrl ||
+        decodeURIComponent(img.src) === decodeURIComponent(originalUrl);
+
+      if (match) {
 
         if (action === "SHOW_PROCESSING") {
           // Add overlay

@@ -30,7 +30,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.type === "PAYMENT_SUCCESS") {
     chrome.notifications.create({
       type: 'basic',
-      iconUrl: chrome.runtime.getURL('logo.jpg'),
+      iconUrl: chrome.runtime.getURL('icons/icon128.png'),
       title: 'Payment Successful',
       message: 'Your credits have been topped up!'
     });
@@ -94,16 +94,16 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
     chrome.identity.getAuthToken({ interactive: false }, function (token) {
       if (token) {
-        // Inject content script dynamically
+        // Inject content script dynamically into the specific frame
         chrome.scripting.executeScript({
-          target: { tabId: tab.id },
+          target: { tabId: tab.id, frameIds: [info.frameId] },
           files: ['lib/sentry.min.js', 'content.js']
         }, () => {
           if (chrome.runtime.lastError) {
             console.error("Script injection failed: " + chrome.runtime.lastError.message);
             // Optional: Notify user of failure
           } else {
-            startTryOnJob(itemUrl, selfieId, token, tab.id, tab.url, tab.title);
+            startTryOnJob(itemUrl, selfieId, token, tab.id, info.frameId, tab.url, tab.title);
           }
         });
       }
@@ -114,7 +114,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       if (chrome.runtime.lastError || !token) {
         chrome.notifications.create({
           type: 'basic',
-          iconUrl: chrome.runtime.getURL('logo.jpg'),
+          iconUrl: chrome.runtime.getURL('icons/icon128.png'),
           title: 'Login Failed',
           message: 'Please open the extension popup to sign in.'
         });
@@ -122,7 +122,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         // Success
         chrome.notifications.create({
           type: 'basic',
-          iconUrl: chrome.runtime.getURL('logo.jpg'),
+          iconUrl: chrome.runtime.getURL('icons/icon128.png'),
           title: 'Login Successful',
           message: 'You can now use the context menu to try on clothes.'
         });
@@ -132,7 +132,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   } else if (info.menuItemId === "no-images") {
     chrome.notifications.create({
       type: 'basic',
-      iconUrl: chrome.runtime.getURL('logo.jpg'),
+      iconUrl: chrome.runtime.getURL('icons/icon128.png'),
       title: 'No Selfies Found',
       message: 'Please open the extension popup to upload a selfie first.'
     });
@@ -148,8 +148,9 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
  * @param {string} selfieId - The identifier of the user's selfie to use for the try-on.
  * @param {string} token - Authorization token to include in the request Authorization header.
  * @param {number} tabId - The Chrome tab id where content-script messages and prompts should be sent.
+ * @param {number} frameId - The frame id where the image creates.
  */
-async function startTryOnJob(itemUrl, selfieId, token, tabId, siteUrl, siteTitle) {
+async function startTryOnJob(itemUrl, selfieId, token, tabId, frameId, siteUrl, siteTitle) {
   try {
     console.log("Starting try-on job...", { itemUrl, selfieId, siteUrl });
 
@@ -172,16 +173,22 @@ async function startTryOnJob(itemUrl, selfieId, token, tabId, siteUrl, siteTitle
         // Handle Insufficient Credits
         chrome.notifications.create({
           type: 'basic',
-          iconUrl: chrome.runtime.getURL('logo.jpg'),
+          iconUrl: chrome.runtime.getURL('icons/icon128.png'),
           title: 'Insufficient Credits',
           message: 'You need more credits to generate images.',
           requireInteraction: true
+        }, (id) => {
+          if (chrome.runtime.lastError) {
+            console.error("Notification error:", chrome.runtime.lastError);
+          } else {
+            console.log("Notification created:", id);
+          }
         });
 
         chrome.tabs.sendMessage(tabId, {
           action: "SHOW_TOPUP_PROMPT",
           originalUrl: itemUrl
-        });
+        }, { frameId: frameId });
         return; // Stop execution
       }
 
@@ -194,7 +201,7 @@ async function startTryOnJob(itemUrl, selfieId, token, tabId, siteUrl, siteTitle
     try {
       chrome.notifications.create({
         type: 'basic',
-        iconUrl: chrome.runtime.getURL('logo.jpg'),
+        iconUrl: chrome.runtime.getURL('icons/icon128.png'),
         title: 'Try-On Started',
         message: 'We are processing your request...'
       });
@@ -204,9 +211,9 @@ async function startTryOnJob(itemUrl, selfieId, token, tabId, siteUrl, siteTitle
     chrome.tabs.sendMessage(tabId, {
       action: "SHOW_PROCESSING",
       originalUrl: itemUrl
-    });
+    }, { frameId: frameId });
 
-    pollStatus(jobId, itemUrl, tabId);
+    pollStatus(jobId, itemUrl, tabId, frameId);
 
   } catch (error) {
     console.error("Error starting job:", error);
@@ -214,7 +221,7 @@ async function startTryOnJob(itemUrl, selfieId, token, tabId, siteUrl, siteTitle
     try {
       chrome.notifications.create({
         type: 'basic',
-        iconUrl: chrome.runtime.getURL('logo.jpg'),
+        iconUrl: chrome.runtime.getURL('icons/icon128.png'),
         title: 'Error',
         message: error.message || 'Failed to start try-on.',
         requireInteraction: true
@@ -225,11 +232,11 @@ async function startTryOnJob(itemUrl, selfieId, token, tabId, siteUrl, siteTitle
       action: "SHOW_ERROR",
       originalUrl: itemUrl,
       error: error.message || "Failed to start try-on"
-    });
+    }, { frameId: frameId });
   }
 }
 
-function pollStatus(jobId, originalUrl, tabId) {
+function pollStatus(jobId, originalUrl, tabId, frameId) {
   let attempts = 0;
   const maxAttempts = 100; // 300 seconds = 5 minutes
 
@@ -241,7 +248,7 @@ function pollStatus(jobId, originalUrl, tabId) {
 
       chrome.notifications.create({
         type: 'basic',
-        iconUrl: chrome.runtime.getURL('logo.jpg'),
+        iconUrl: chrome.runtime.getURL('icons/icon128.png'),
         title: 'Try-On Timed Out',
         message: 'The process took longer than 5 minutes. Please try again.'
       });
@@ -250,7 +257,7 @@ function pollStatus(jobId, originalUrl, tabId) {
         action: "SHOW_ERROR",
         originalUrl: originalUrl,
         error: "Timeout: Process took >5m. Please try again."
-      });
+      }, { frameId: frameId });
       return;
     }
 
@@ -267,11 +274,11 @@ function pollStatus(jobId, originalUrl, tabId) {
           action: "REPLACE_IMAGE",
           originalUrl: originalUrl,
           resultUrl: data.resultUrl
-        });
+        }, { frameId: frameId });
 
         chrome.notifications.create({
           type: 'basic',
-          iconUrl: chrome.runtime.getURL('logo.jpg'),
+          iconUrl: chrome.runtime.getURL('icons/icon128.png'),
           title: 'Try-On Complete!',
           message: 'The image has been updated.'
         });
@@ -280,7 +287,7 @@ function pollStatus(jobId, originalUrl, tabId) {
         clearInterval(intervalId);
         chrome.notifications.create({
           type: 'basic',
-          iconUrl: chrome.runtime.getURL('logo.jpg'),
+          iconUrl: chrome.runtime.getURL('icons/icon128.png'),
           title: 'Try-On Failed',
           message: data.error || 'Something went wrong.',
           requireInteraction: true
@@ -290,7 +297,7 @@ function pollStatus(jobId, originalUrl, tabId) {
           action: "SHOW_ERROR",
           originalUrl: originalUrl,
           error: data.error || "Try-On Failed"
-        });
+        }, { frameId: frameId });
       }
     } catch (e) {
       console.error("Polling error", e);

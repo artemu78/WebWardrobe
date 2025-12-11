@@ -27,6 +27,16 @@ function runEsbuild() {
   fs.copyFileSync("background.js", path.join(archivePath, "background.js"));
   fs.copyFileSync("content.js", path.join(archivePath, "content.js"));
   fs.copyFileSync("manifest.json", path.join(archivePath, "manifest.json"));
+
+  // Copy lib directory
+  try {
+    fs.cpSync("lib", path.join(archivePath, "lib"), { recursive: true });
+  } catch (error) {
+    // Fallback for older Node versions or if cpSync fails
+    const libPath = path.join(archivePath, 'lib');
+    if (!fs.existsSync(libPath)) fs.mkdirSync(libPath);
+    fs.copyFileSync("lib/sentry.min.js", path.join(libPath, "sentry.min.js"));
+  }
   spawn("node", ["bump-version"], {
     stdio: ['inherit', 'inherit', 'inherit'] // Inherit stdio from parent process
   });
