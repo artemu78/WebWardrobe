@@ -25,6 +25,32 @@ if (window.webWardrobeContentScriptInjected) {
       }
     };
 
+    // Helper to ensuring image is wrapped for overlay positioning
+    const ensureImageWrapper = (img) => {
+      // Check if already wrapped by us (using a specific class or data attribute)
+      if (img.parentNode.hasAttribute('data-webwardrobe-wrapper')) {
+        return img.parentNode;
+      }
+
+      // Create wrapper
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'relative';
+      wrapper.style.display = 'inline-block'; // Minimizes layout disruption for images
+      wrapper.style.lineHeight = '0'; // Fix specific gap issue with inline-block images
+      wrapper.setAttribute('data-webwardrobe-wrapper', 'true');
+
+      // Preserve some computed styles that might affect layout
+      const computedStyle = window.getComputedStyle(img);
+      if (computedStyle.display === 'block') {
+        wrapper.style.display = 'block';
+        wrapper.style.width = 'fit-content';
+      }
+
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      return wrapper;
+    };
+
     for (let img of images) {
       // Robust matching: exact match OR decoded match
       const match = img.src === originalUrl ||
@@ -33,12 +59,10 @@ if (window.webWardrobeContentScriptInjected) {
       if (match) {
 
         if (action === "SHOW_PROCESSING") {
-          // Add overlay
-          const wrapper = document.createElement('div');
-          wrapper.style.position = 'relative';
-          wrapper.style.display = 'inline-block';
-          img.parentNode.insertBefore(wrapper, img);
-          wrapper.appendChild(img);
+          const wrapper = ensureImageWrapper(img);
+
+          // Check if overlay already exists
+          if (wrapper.querySelector(`div[id="webwardrobe-overlay-${originalUrl}"]`)) return;
 
           const overlay = document.createElement('div');
           overlay.id = `webwardrobe-overlay-${originalUrl}`;
@@ -58,14 +82,15 @@ if (window.webWardrobeContentScriptInjected) {
           overlay.style.padding = '10px';
           overlay.style.textAlign = 'center';
           overlay.style.wordBreak = 'break-word';
-          overlay.style.overflowY = 'auto';
+          overlay.style.overflowY = 'auto'; // Handle scroll within overlay
           overlay.innerText = 'Processing Try-On...';
 
           wrapper.appendChild(overlay);
 
         } else if (action === "REPLACE_IMAGE") {
           // Remove overlay if exists
-          const overlay = img.parentElement.querySelector(`div[id="webwardrobe-overlay-${originalUrl}"]`);
+          // Since we wrap, the overlay is a sibling of img, inside wrapper
+          const overlay = img.parentNode.querySelector(`div[id="webwardrobe-overlay-${originalUrl}"]`);
           if (overlay) overlay.remove();
 
           img.src = resultUrl;
@@ -76,7 +101,6 @@ if (window.webWardrobeContentScriptInjected) {
 
         } else if (action === "SHOW_ERROR") {
           // Update overlay to show error
-          // Use getElementById for robustness
           const overlay = document.getElementById(`webwardrobe-overlay-${originalUrl}`);
 
           if (overlay) {
@@ -85,34 +109,21 @@ if (window.webWardrobeContentScriptInjected) {
             overlay.style.cursor = 'pointer';
             overlay.title = "Click to dismiss";
 
-            // Make it persistent (remove auto-hide)
+            // Make it persistent (remove auto-hide if any)
             overlay.onclick = () => overlay.remove();
           } else {
-            // Fallback if overlay not found (e.g. image removed or ID mismatch)
+            // Fallback: try to create a new error overlay if none exists
+            // This might happen if SHOW_PROCESSING wasn't called (fast fail)
+            // For now, consistent with previous behavior + alert fallback
             alert(`WebWardrobe Error: ${error}`);
           }
 
         } else if (action === "SHOW_TOPUP_PROMPT") {
-          // Remove previous overlay if exists
-          const oldOverlay = img.parentElement.querySelector(`div[id="webwardrobe-overlay-${originalUrl}"]`);
-          if (oldOverlay) oldOverlay.remove();
+          const wrapper = ensureImageWrapper(img);
 
-          const wrapper = document.createElement('div');
-          if (img.parentElement.tagName !== 'DIV' || img.parentElement.style.position !== 'relative') {
-            // Only wrap if not already wrapped or suitably positioned (simplified check)
-            // Actually, we should probably check if we already wrapped it in SHOW_PROCESSING.
-            // If SHOW_PROCESSING wasn't called (unlikely but possible if fast fail), we might need to wrap.
-            // But usually background calls SHOW_PROCESSING first? No, dispatcher checks credits first.
-            // So SHOW_PROCESSING might not have been called yet if we failed fast.
-            // So we need to ensure wrapper.
-            if (img.parentNode.style.position !== 'relative') {
-              const w = document.createElement('div');
-              w.style.position = 'relative';
-              w.style.display = 'inline-block';
-              img.parentNode.insertBefore(w, img);
-              w.appendChild(img);
-            }
-          }
+          // Remove previous overlay if exists
+          const oldOverlay = wrapper.querySelector(`div[id="webwardrobe-overlay-${originalUrl}"]`);
+          if (oldOverlay) oldOverlay.remove();
 
           const overlay = document.createElement('div');
           overlay.id = `webwardrobe-overlay-${originalUrl}`;
@@ -131,6 +142,7 @@ if (window.webWardrobeContentScriptInjected) {
           overlay.style.zIndex = '1000';
           overlay.style.padding = '10px';
           overlay.style.textAlign = 'center';
+          overlay.style.wordBreak = 'break-word';
 
           const msg = document.createElement('div');
           msg.innerText = "Insufficient Credits";
@@ -148,8 +160,9 @@ if (window.webWardrobeContentScriptInjected) {
           btn.style.cursor = 'pointer';
           btn.onclick = (e) => {
             e.stopPropagation();
-            alert("Top-up functionality coming soon!");
-            overlay.remove();
+            alert("Please open the extension popup to top up credits.");
+            // Ideally this would open the popup but content scripts can't easily force open popup.
+            // They can send a message to background, but background also can't force open popup.
           };
           overlay.appendChild(btn);
 
@@ -165,8 +178,7 @@ if (window.webWardrobeContentScriptInjected) {
           }
           overlay.appendChild(close);
 
-          // Append to the wrapper (which is img's parent now)
-          img.parentNode.appendChild(overlay);
+          wrapper.appendChild(overlay);
         }
       }
     }
