@@ -1342,3 +1342,12 @@ def payment_webhook_handler(event, context):
     except Exception as e:
         print(f"Error in webhook handler: {e}")
         return {'statusCode': 500, 'body': str(e)}
+
+def get_payment_url_handler(event, context):
+    """
+    Returns the hardcoded payment URL.
+    """
+    return {
+        'statusCode': 200,
+        'body': json.dumps("https://web-wardrobe.netlify.app/")
+    }

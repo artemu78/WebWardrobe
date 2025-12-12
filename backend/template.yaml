@@ -311,6 +311,20 @@ Resources:
             Path: /payment/link
             Method: POST
 
+  PaymentUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: dispatcher_lambda.get_payment_url_handler
+      Runtime: python3.9
+      Events:
+        GetPaymentUrl:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TryOnApi
+            Path: /payment-url
+            Method: GET
+
   # -------------------------------------------------------------------------
   # S3 Bucket
   # -------------------------------------------------------------------------

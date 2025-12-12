@@ -34,13 +34,33 @@ if (window.webWardrobeContentScriptInjected) {
 
       // Create wrapper
       const wrapper = document.createElement('div');
-      wrapper.style.position = 'relative';
-      wrapper.style.display = 'inline-block'; // Minimizes layout disruption for images
-      wrapper.style.lineHeight = '0'; // Fix specific gap issue with inline-block images
       wrapper.setAttribute('data-webwardrobe-wrapper', 'true');
 
       // Preserve some computed styles that might affect layout
       const computedStyle = window.getComputedStyle(img);
+      const isAbsolute = computedStyle.position === 'absolute' || computedStyle.position === 'fixed';
+
+      if (isAbsolute) {
+        // Transfer absolute positioning to wrapper to prevent layout shift ("jumping")
+        wrapper.style.position = computedStyle.position;
+        wrapper.style.top = computedStyle.top;
+        wrapper.style.left = computedStyle.left;
+        wrapper.style.right = computedStyle.right;
+        wrapper.style.bottom = computedStyle.bottom;
+        wrapper.style.zIndex = computedStyle.zIndex;
+
+        // Transfer margins to wrapper
+        wrapper.style.marginTop = computedStyle.marginTop;
+        wrapper.style.marginBottom = computedStyle.marginBottom;
+        wrapper.style.marginLeft = computedStyle.marginLeft;
+        wrapper.style.marginRight = computedStyle.marginRight;
+      } else {
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'inline-block'; // Minimizes layout disruption for static images
+      }
+
+      wrapper.style.lineHeight = '0'; // Fix specific gap issue with inline-block images
+
       if (computedStyle.display === 'block') {
         wrapper.style.display = 'block';
         wrapper.style.width = 'fit-content';
@@ -48,6 +68,12 @@ if (window.webWardrobeContentScriptInjected) {
 
       img.parentNode.insertBefore(wrapper, img);
       wrapper.appendChild(img);
+
+      if (isAbsolute) {
+        // Reset image styles since the wrapper now handles positioning
+        img.style.position = 'static';
+        img.style.margin = '0';
+      }
       return wrapper;
     };
 
@@ -83,7 +109,7 @@ if (window.webWardrobeContentScriptInjected) {
           overlay.style.textAlign = 'center';
           overlay.style.wordBreak = 'break-word';
           overlay.style.overflowY = 'auto'; // Handle scroll within overlay
-          overlay.innerText = 'Processing Try-On...';
+          overlay.textContent = 'Processing Try-On...';
 
           wrapper.appendChild(overlay);
 
@@ -105,7 +131,7 @@ if (window.webWardrobeContentScriptInjected) {
 
           if (overlay) {
             overlay.style.backgroundColor = 'rgba(255, 0, 0, 0.9)'; // Darker red
-            overlay.innerText = (error || 'Try-On Failed') + '\n(Click to dismiss)';
+            overlay.textContent = (error || 'Try-On Failed') + '\n(Click to dismiss)';
             overlay.style.cursor = 'pointer';
             overlay.title = "Click to dismiss";
 
@@ -145,13 +171,20 @@ if (window.webWardrobeContentScriptInjected) {
           overlay.style.wordBreak = 'break-word';
 
           const msg = document.createElement('div');
-          msg.innerText = "Insufficient Credits";
+          msg.textContent = "Insufficient Credits";
           msg.style.fontWeight = 'bold';
           msg.style.marginBottom = '10px';
           overlay.appendChild(msg);
 
+          // Fetch payment URL
+          let paymentUrl = "https://web-wardrobe.netlify.app/";
+          fetch("https://nw2ghqgbe5.execute-api.us-east-1.amazonaws.com/prod/payment-url")
+            .then(res => res.json())
+            .then(data => { paymentUrl = data; })
+            .catch(err => console.error("Failed to fetch payment URL", err));
+
           const btn = document.createElement('button');
-          btn.innerText = "Top Up Credits";
+          btn.textContent = "Top Up Credits";
           btn.style.backgroundColor = '#4285f4';
           btn.style.color = 'white';
           btn.style.border = 'none';
@@ -160,14 +193,12 @@ if (window.webWardrobeContentScriptInjected) {
           btn.style.cursor = 'pointer';
           btn.onclick = (e) => {
             e.stopPropagation();
-            alert("Please open the extension popup to top up credits.");
-            // Ideally this would open the popup but content scripts can't easily force open popup.
-            // They can send a message to background, but background also can't force open popup.
+            window.open(paymentUrl, "_blank");
           };
           overlay.appendChild(btn);
 
           const close = document.createElement('div');
-          close.innerText = "Cancel";
+          close.textContent = "Cancel";
           close.style.fontSize = "12px";
           close.style.marginTop = "10px";
           close.style.cursor = "pointer";
