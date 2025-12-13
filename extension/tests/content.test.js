@@ -264,5 +264,99 @@ describe('content.js', () => {
             closeDiv.click();
             expect(document.querySelector(`[id="webwardrobe-overlay-${testUrl}"]`)).toBeNull();
         });
+
+        test('ensureImageWrapper: should handle display block', () => {
+            global.window.getComputedStyle.mockReturnValue({
+                position: 'static',
+                display: 'block',
+                width: '100px'
+            });
+
+            messageHandler({
+                action: 'SHOW_PROCESSING',
+                originalUrl: testUrl
+            }, {}, jest.fn());
+
+            const wrapper = document.querySelector('[data-webwardrobe-wrapper="true"]');
+            expect(wrapper.style.display).toBe('block');
+            // JSDOM might not support fit-content, so skipping width check
+        });
+
+        test('REPLACE_IMAGE: should restore opacity after timeout', () => {
+            jest.useFakeTimers();
+            messageHandler({ action: 'SHOW_PROCESSING', originalUrl: testUrl }, {}, jest.fn());
+
+            messageHandler({
+                action: 'REPLACE_IMAGE',
+                originalUrl: testUrl,
+                resultUrl: 'http://res.jpg'
+            }, {}, jest.fn());
+
+            expect(img.style.opacity).toBe('0.5');
+
+            jest.advanceTimersByTime(100);
+            expect(img.style.opacity).toBe('1');
+            jest.useRealTimers();
+        });
+
+        test('SHOW_TOPUP_PROMPT: should handle fetch error gracefully', async () => {
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+            global.fetch.mockImplementationOnce(() => Promise.reject('Network error'));
+
+            messageHandler({
+                action: 'SHOW_TOPUP_PROMPT',
+                originalUrl: testUrl
+            }, {}, jest.fn());
+
+            // Wait for promise rejection
+            await new Promise(process.nextTick);
+            await new Promise(process.nextTick);
+            await new Promise(process.nextTick);
+
+            expect(consoleSpy).toHaveBeenCalledWith("Failed to fetch payment URL", "Network error");
+            consoleSpy.mockRestore();
+        });
+
+        test('SHOW_TOPUP_PROMPT: click events should stop propagation', async () => {
+            messageHandler({
+                action: 'SHOW_TOPUP_PROMPT',
+                originalUrl: testUrl
+            }, {}, jest.fn());
+
+            const wrapper = document.querySelector('[data-webwardrobe-wrapper="true"]');
+            const overlay = wrapper.querySelector(`[id="webwardrobe-overlay-${testUrl}"]`);
+
+            // Wait for fetch
+            await Promise.resolve();
+            await Promise.resolve();
+            await Promise.resolve();
+            await Promise.resolve();
+
+            const btn = overlay.querySelector('button');
+            const closeDiv = Array.from(overlay.querySelectorAll('div')).find(d => d.textContent === 'Cancel');
+
+            const btnClickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
+            const stopPropSpy1 = jest.spyOn(btnClickEvent, 'stopPropagation');
+            btn.dispatchEvent(btnClickEvent);
+            expect(stopPropSpy1).toHaveBeenCalled();
+
+            // Re-get overlay/closeDiv as close removes it? No, wait. 
+            // The overlay is removed on close click, so we test close propagation first or re-setup?
+            // Actually closeDiv click removes the overlay, so we need to spy on the event before it finishes?
+            // The handler calls e.stopPropagation() immediately.
+
+            // Re-setup specifically for close click to be safe (or just test propagation on the event object)
+            messageHandler({
+                action: 'SHOW_TOPUP_PROMPT',
+                originalUrl: testUrl
+            }, {}, jest.fn());
+            const overlay2 = wrapper.querySelector(`[id="webwardrobe-overlay-${testUrl}"]`);
+            const closeDiv2 = Array.from(overlay2.querySelectorAll('div')).find(d => d.textContent === 'Cancel');
+
+            const closeClickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
+            const stopPropSpy2 = jest.spyOn(closeClickEvent, 'stopPropagation');
+            closeDiv2.dispatchEvent(closeClickEvent);
+            expect(stopPropSpy2).toHaveBeenCalled();
+        });
     });
 });

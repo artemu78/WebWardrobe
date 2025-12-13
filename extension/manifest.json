@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "WebWardrobe Virtual Try-On",
-  "version": "2.11.20",
+  "version": "2.11.22",
   "description": "Try on clothes from any website using your own photos.",
   "permissions": [
     "contextMenus",

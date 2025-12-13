@@ -1,0 +1,1072 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Extension Popup Snapshot: Initial State (Logged Out) 1`] = `
+<body
+  class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 font-display"
+>
+  
+
+
+  <div
+    id="auth-section"
+  >
+    
+    
+    <!-- Simplified login view, can be styled later if needed -->
+    
+    
+    <h1
+      class="text-2xl font-bold text-gray-900 dark:text-white text-center mb-4"
+    >
+      WebWardrobe
+    </h1>
+    
+    
+    <button
+      class="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-background-dark transition-all"
+      id="login-btn"
+    >
+      
+        Sign in with Google
+    
+    </button>
+    
+
+  </div>
+  
+
+
+  <div
+    class="hidden"
+    id="main-section"
+  >
+    
+    
+    <header
+      class="flex justify-between items-center mb-6"
+    >
+      
+        
+      <h1
+        class="text-2xl font-bold text-gray-900 dark:text-white"
+      >
+        Your Wardrobe
+      </h1>
+      
+        
+      <button
+        class="bg-primary/10 dark:bg-primary/20 text-primary font-semibold py-2 px-4 rounded-lg text-sm hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors flex items-center space-x-2"
+        id="logout-btn"
+      >
+        
+            
+        <span
+          class="material-icons-outlined text-base"
+        >
+          logout
+        </span>
+        
+            
+        <span>
+          Sign Out
+        </span>
+        
+        
+      </button>
+      
+    
+    </header>
+    
+    
+    <main
+      class="space-y-8"
+    >
+      
+        
+      <section
+        class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm"
+      >
+        
+            
+        <div
+          class="flex justify-between items-center"
+        >
+          
+                
+          <p
+            class="font-medium text-gray-700 dark:text-gray-300"
+          >
+            Credits: 
+            <span
+              class="font-bold text-gray-900 dark:text-white"
+              id="credit-count"
+            >
+              ...
+            </span>
+          </p>
+          
+                
+          <button
+            class="bg-primary/10 dark:bg-primary/20 text-primary font-semibold py-2 px-4 rounded-lg text-sm hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors"
+            id="topup-btn"
+          >
+            Top Up
+          </button>
+          
+            
+        </div>
+        
+        
+      </section>
+      
+
+        
+      <section
+        class="space-y-6"
+        id="selfies-section"
+      >
+        
+            
+        <div
+          class="flex justify-between items-center"
+        >
+          
+                
+          <h2
+            class="text-xl font-bold text-gray-900 dark:text-white"
+          >
+            Selfies
+          </h2>
+          
+                
+          <button
+            class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+            data-toggle-button="selfies-list"
+          >
+            
+                    
+            <span
+              class="material-icons-outlined"
+            >
+              expand_less
+            </span>
+            
+                
+          </button>
+          
+            
+        </div>
+        
+            
+        <div
+          class="space-y-4"
+          id="selfies-list"
+        >
+          
+                
+          <!-- Selfie items will be injected here -->
+          
+            
+        </div>
+        
+        
+      </section>
+      
+
+        
+      <section
+        class="space-y-6"
+        id="generated-section"
+      >
+        
+            
+        <div
+          class="flex justify-between items-center"
+        >
+          
+                
+          <h2
+            class="text-xl font-bold text-gray-900 dark:text-white"
+            id="generated-section-title"
+          >
+            Generated Images
+          </h2>
+          
+                
+          <button
+            class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+            data-toggle-button="generated-images-list"
+          >
+            
+                    
+            <span
+              class="material-icons-outlined"
+            >
+              expand_less
+            </span>
+            
+                
+          </button>
+          
+            
+        </div>
+        
+            
+        <div
+          class="space-y-4"
+          id="generated-images-list"
+        >
+          
+                
+          <!-- Generated image items will be injected here -->
+          
+            
+        </div>
+        
+        
+      </section>
+      
+
+        
+      <section
+        class="space-y-6"
+        id="add-new-image-section"
+      >
+        
+            
+        <div
+          class="flex justify-between items-center"
+        >
+          
+                
+          <h2
+            class="text-xl font-bold text-gray-900 dark:text-white"
+          >
+            Add New Image
+          </h2>
+          
+                
+          <button
+            class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+            data-toggle-button="add-new-image-form"
+          >
+            
+                    
+            <span
+              class="material-icons-outlined"
+            >
+              expand_less
+            </span>
+            
+                
+          </button>
+          
+            
+        </div>
+        
+            
+        <div
+          class="space-y-4"
+          id="add-new-image-form"
+        >
+          
+                
+          <div>
+            
+                    
+            <label
+              class="sr-only"
+              for="image-name"
+            >
+              Image Name
+            </label>
+            
+                    
+            <input
+              class="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary focus:border-primary dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              id="image-name"
+              placeholder="Name (e.g., My selfie)"
+              type="text"
+            />
+            
+                
+          </div>
+          
+                
+          <div
+            class="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary dark:hover:border-primary transition-colors min-h-[300px] flex flex-col justify-center items-center"
+            id="upload-drop-zone"
+          >
+            
+                    
+                    
+            <input
+              accept="image/*"
+              aria-label="Upload image"
+              class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer z-10"
+              id="image-file"
+              type="file"
+            />
+            
+
+                    
+            <div
+              class="flex flex-col items-center justify-center space-y-2 text-gray-500 dark:text-gray-400 pointer-events-none"
+              id="upload-empty-state"
+            >
+              
+                        
+              <span
+                class="material-icons-outlined text-4xl"
+              >
+                cloud_upload
+              </span>
+              
+                        
+              <p
+                class="font-medium"
+                id="upload-text"
+              >
+                Drag & drop files here
+              </p>
+              
+                        
+              <p
+                class="text-sm"
+              >
+                or
+              </p>
+              
+                        
+              <span
+                class="font-semibold text-primary"
+              >
+                Browse Files
+              </span>
+              
+                    
+            </div>
+            
+
+                    
+            <div
+              class="hidden absolute top-0 left-0 w-full h-full p-2 z-20 bg-white dark:bg-gray-800 rounded-lg"
+              id="upload-preview-state"
+            >
+              
+                        
+              <img
+                alt="Preview"
+                class="w-full h-full object-contain rounded-md"
+                id="upload-preview-img"
+              />
+              
+                        
+              <button
+                class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 shadow-lg border-2 border-white transition-colors flex items-center justify-center z-30"
+                id="upload-remove-btn"
+                title="Remove image"
+              >
+                
+                            
+                <span
+                  class="material-icons-outlined text-xl"
+                >
+                  delete
+                </span>
+                
+                        
+              </button>
+              
+                    
+            </div>
+            
+                
+          </div>
+          
+                 
+          <p
+            class="text-sm text-center"
+            id="status-msg"
+          />
+          
+                
+          <button
+            class="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-background-dark transition-all"
+            id="upload-btn"
+          >
+            
+                    Upload
+                
+          </button>
+          
+            
+        </div>
+        
+        
+      </section>
+      
+    
+    </main>
+    
+
+  </div>
+  
+
+
+  <!-- Re-add the modal from the original file for image previews -->
+  
+
+  <div
+    id="image-modal"
+    style="display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9);"
+  >
+    
+  
+    <span
+      id="modal-close"
+      style="position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; transition: 0.3s; cursor: pointer;"
+    >
+      ×
+    </span>
+    
+  
+    <img
+      id="modal-img"
+      style="margin: auto; display: block; width: auto; max-width: 90%; max-height: 90%; object-fit: contain; padding-top: 50px;"
+    />
+    
+
+  </div>
+  
+
+
+  <script
+    src="lib/sentry.min.js"
+  />
+  
+
+  <script
+    src="popup.js"
+  />
+  
+
+
+
+</body>
+`;
+
+exports[`Extension Popup Snapshot: Logged In State with Images 1`] = `
+<body
+  class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 font-display"
+>
+  
+
+
+  <div
+    class="hidden"
+    id="auth-section"
+  >
+    
+    
+    <!-- Simplified login view, can be styled later if needed -->
+    
+    
+    <h1
+      class="text-2xl font-bold text-gray-900 dark:text-white text-center mb-4"
+    >
+      WebWardrobe
+    </h1>
+    
+    
+    <button
+      class="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-background-dark transition-all"
+      id="login-btn"
+    >
+      
+        Sign in with Google
+    
+    </button>
+    
+
+  </div>
+  
+
+
+  <div
+    class=""
+    id="main-section"
+  >
+    
+    
+    <header
+      class="flex justify-between items-center mb-6"
+    >
+      
+        
+      <h1
+        class="text-2xl font-bold text-gray-900 dark:text-white"
+      >
+        Your Wardrobe
+      </h1>
+      
+        
+      <button
+        class="bg-primary/10 dark:bg-primary/20 text-primary font-semibold py-2 px-4 rounded-lg text-sm hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors flex items-center space-x-2"
+        id="logout-btn"
+      >
+        
+            
+        <span
+          class="material-icons-outlined text-base"
+        >
+          logout
+        </span>
+        
+            
+        <span>
+          Sign Out
+        </span>
+        
+        
+      </button>
+      
+    
+    </header>
+    
+    
+    <main
+      class="space-y-8"
+    >
+      
+        
+      <section
+        class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm"
+      >
+        
+            
+        <div
+          class="flex justify-between items-center"
+        >
+          
+                
+          <p
+            class="font-medium text-gray-700 dark:text-gray-300"
+          >
+            Credits: 
+            <span
+              class="font-bold text-gray-900 dark:text-white"
+              id="credit-count"
+            >
+              10
+            </span>
+          </p>
+          
+                
+          <button
+            class="bg-primary/10 dark:bg-primary/20 text-primary font-semibold py-2 px-4 rounded-lg text-sm hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors"
+            id="topup-btn"
+          >
+            Top Up
+          </button>
+          
+            
+        </div>
+        
+        
+      </section>
+      
+
+        
+      <section
+        class="space-y-6"
+        id="selfies-section"
+      >
+        
+            
+        <div
+          class="flex justify-between items-center"
+        >
+          
+                
+          <h2
+            class="text-xl font-bold text-gray-900 dark:text-white"
+          >
+            Selfies
+          </h2>
+          
+                
+          <button
+            class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+            data-toggle-button="selfies-list"
+          >
+            
+                    
+            <span
+              class="material-icons-outlined"
+            >
+              expand_less
+            </span>
+            
+                
+          </button>
+          
+            
+        </div>
+        
+            
+        <div
+          class="space-y-4"
+          id="selfies-list"
+        >
+          <div
+            class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex items-center space-x-4"
+          >
+            
+            
+            <img
+              alt="Selfie 1"
+              class="w-16 h-16 object-cover rounded-md cursor-pointer view-btn"
+              src="http://example.com/1_thumb.jpg"
+            />
+            
+            
+            <div
+              class="flex-1"
+            >
+              
+                
+              <p
+                class="font-medium text-gray-900 dark:text-white"
+              >
+                Selfie 1
+              </p>
+              
+            
+            </div>
+            
+            
+            <div
+              class="flex items-center space-x-1 text-gray-500 dark:text-gray-400"
+            >
+              
+                
+              <button
+                class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full rename-btn"
+                title="Rename"
+              >
+                
+                    
+                <span
+                  class="material-icons-outlined text-xl"
+                >
+                  edit
+                </span>
+                
+                
+              </button>
+              
+                
+              <a
+                class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                download="Selfie 1"
+                href="http://example.com/1.jpg"
+                target="_blank"
+                title="Download"
+              >
+                
+                    
+                <span
+                  class="material-icons-outlined text-xl"
+                >
+                  download
+                </span>
+                
+                
+              </a>
+              
+                
+              <button
+                class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full delete-btn"
+                title="Delete"
+              >
+                
+                    
+                <span
+                  class="material-icons-outlined text-xl text-red-500"
+                >
+                  delete
+                </span>
+                
+                
+              </button>
+              
+            
+            </div>
+            
+          
+          </div>
+        </div>
+        
+        
+      </section>
+      
+
+        
+      <section
+        class="space-y-6"
+        id="generated-section"
+      >
+        
+            
+        <div
+          class="flex justify-between items-center"
+        >
+          
+                
+          <h2
+            class="text-xl font-bold text-gray-900 dark:text-white"
+            id="generated-section-title"
+          >
+            Generated Images
+          </h2>
+          
+                
+          <button
+            class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+            data-toggle-button="generated-images-list"
+          >
+            
+                    
+            <span
+              class="material-icons-outlined"
+            >
+              expand_less
+            </span>
+            
+                
+          </button>
+          
+            
+        </div>
+        
+            
+        <div
+          class="space-y-4"
+          id="generated-images-list"
+        >
+          <div
+            class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex items-center space-x-4"
+          >
+            
+                    
+            <img
+              alt="Generated image"
+              class="w-16 h-16 object-cover rounded-md cursor-pointer view-btn"
+              src="http://example.com/gen1.png"
+            />
+            
+                    
+            <div
+              class="flex-1 min-w-0"
+            >
+              
+                        
+              <a
+                class="font-medium text-primary hover:underline line-clamp-2"
+                href="http://site.com"
+                target="_blank"
+                title="Site"
+              >
+                Site
+              </a>
+              
+                        
+              <p
+                class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+              >
+                1/1/2023, 15:00
+              </p>
+              
+                    
+            </div>
+            
+                    
+            <div
+              class="flex items-center space-x-1 text-gray-500 dark:text-gray-400"
+            >
+              
+                        
+              <a
+                class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                download="generated-image.png"
+                href="http://example.com/gen1.png"
+                target="_blank"
+                title="Download"
+              >
+                
+                            
+                <span
+                  class="material-icons-outlined text-xl"
+                >
+                  download
+                </span>
+                
+                        
+              </a>
+              
+                         
+              <button
+                class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full delete-gen-btn"
+                title="Delete"
+              >
+                
+                            
+                <span
+                  class="material-icons-outlined text-xl text-red-500"
+                >
+                  delete
+                </span>
+                
+                        
+              </button>
+              
+                    
+            </div>
+            
+                
+          </div>
+        </div>
+        
+        
+      </section>
+      
+
+        
+      <section
+        class="space-y-6"
+        id="add-new-image-section"
+      >
+        
+            
+        <div
+          class="flex justify-between items-center"
+        >
+          
+                
+          <h2
+            class="text-xl font-bold text-gray-900 dark:text-white"
+          >
+            Add New Image
+          </h2>
+          
+                
+          <button
+            class="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+            data-toggle-button="add-new-image-form"
+          >
+            
+                    
+            <span
+              class="material-icons-outlined"
+            >
+              expand_less
+            </span>
+            
+                
+          </button>
+          
+            
+        </div>
+        
+            
+        <div
+          class="space-y-4"
+          id="add-new-image-form"
+        >
+          
+                
+          <div>
+            
+                    
+            <label
+              class="sr-only"
+              for="image-name"
+            >
+              Image Name
+            </label>
+            
+                    
+            <input
+              class="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-primary focus:border-primary dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              id="image-name"
+              placeholder="Name (e.g., My selfie)"
+              type="text"
+            />
+            
+                
+          </div>
+          
+                
+          <div
+            class="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary dark:hover:border-primary transition-colors min-h-[300px] flex flex-col justify-center items-center"
+            id="upload-drop-zone"
+          >
+            
+                    
+                    
+            <input
+              accept="image/*"
+              aria-label="Upload image"
+              class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer z-10"
+              id="image-file"
+              type="file"
+            />
+            
+
+                    
+            <div
+              class="flex flex-col items-center justify-center space-y-2 text-gray-500 dark:text-gray-400 pointer-events-none"
+              id="upload-empty-state"
+            >
+              
+                        
+              <span
+                class="material-icons-outlined text-4xl"
+              >
+                cloud_upload
+              </span>
+              
+                        
+              <p
+                class="font-medium"
+                id="upload-text"
+              >
+                Drag & drop files here
+              </p>
+              
+                        
+              <p
+                class="text-sm"
+              >
+                or
+              </p>
+              
+                        
+              <span
+                class="font-semibold text-primary"
+              >
+                Browse Files
+              </span>
+              
+                    
+            </div>
+            
+
+                    
+            <div
+              class="hidden absolute top-0 left-0 w-full h-full p-2 z-20 bg-white dark:bg-gray-800 rounded-lg"
+              id="upload-preview-state"
+            >
+              
+                        
+              <img
+                alt="Preview"
+                class="w-full h-full object-contain rounded-md"
+                id="upload-preview-img"
+              />
+              
+                        
+              <button
+                class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 shadow-lg border-2 border-white transition-colors flex items-center justify-center z-30"
+                id="upload-remove-btn"
+                title="Remove image"
+              >
+                
+                            
+                <span
+                  class="material-icons-outlined text-xl"
+                >
+                  delete
+                </span>
+                
+                        
+              </button>
+              
+                    
+            </div>
+            
+                
+          </div>
+          
+                 
+          <p
+            class="text-sm text-center"
+            id="status-msg"
+          />
+          
+                
+          <button
+            class="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-background-dark transition-all"
+            id="upload-btn"
+          >
+            
+                    Upload
+                
+          </button>
+          
+            
+        </div>
+        
+        
+      </section>
+      
+    
+    </main>
+    
+
+  </div>
+  
+
+
+  <!-- Re-add the modal from the original file for image previews -->
+  
+
+  <div
+    id="image-modal"
+    style="display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9);"
+  >
+    
+  
+    <span
+      id="modal-close"
+      style="position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; transition: 0.3s; cursor: pointer;"
+    >
+      ×
+    </span>
+    
+  
+    <img
+      id="modal-img"
+      style="margin: auto; display: block; width: auto; max-width: 90%; max-height: 90%; object-fit: contain; padding-top: 50px;"
+    />
+    
+
+  </div>
+  
+
+
+  <script
+    src="lib/sentry.min.js"
+  />
+  
+
+  <script
+    src="popup.js"
+  />
+  
+
+
+
+</body>
+`;
