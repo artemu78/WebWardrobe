@@ -131,12 +131,20 @@ export const Header: React.FC<HeaderProps> = ({ translations, lang, onLangChange
                                                 {user.email}
                                             </div>
                                         )}
-                                        <Link 
-                                            to="/account" 
-                                            className="dropdown-link"
+                                        <Link
+                                            to="/account"
                                             onClick={() => setIsDropdownOpen(false)}
+                                            style={{
+                                                display: 'block',
+                                                padding: '10px 12px',
+                                                color: '#333',
+                                                textDecoration: 'none',
+                                                fontWeight: 500,
+                                                borderRadius: '4px',
+                                                transition: 'background 0.2s'
+                                            }}
                                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
-                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
                                             {t('account')}
                                         </Link>
