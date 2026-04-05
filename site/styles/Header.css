@@ -48,7 +48,7 @@
 .dropdown-button.sign-out {
     margin-top: 4px;
     border-top: 1px solid #f0f0f0;
-    border-radius: 0 0 4px 4px; /* Adjust if needed, or keep generic */
+    /* border-radius: 0 0 4px 4px; - Removed duplicate/overridden property */
     /* Actually, a border on the button itself might look weird if it has padding and hover. 
        Better to have a separator element or use margin/border on a container?
        Or just padding-top with a border. 

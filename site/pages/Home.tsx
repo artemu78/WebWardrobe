@@ -27,18 +27,18 @@ const Home: React.FC = () => {
                     'Authorization': `Bearer ${token}`
                 }
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.name) {
-                    setUser({ 
-                        name: data.name, 
-                        picture: data.picture,
-                        email: data.email,
-                        userId: data.userId
-                    });
-                }
-            })
-            .catch(err => console.error('Failed to fetch profile:', err));
+                .then(res => res.json())
+                .then(data => {
+                    if (data.name) {
+                        setUser({
+                            name: data.name,
+                            picture: data.picture,
+                            email: data.email,
+                            userId: data.userId
+                        });
+                    }
+                })
+                .catch(err => console.error('Failed to fetch profile:', err));
         }
     }, []);
 
@@ -47,7 +47,7 @@ const Home: React.FC = () => {
     const t = (key: string) => {
         return (translations[lang]?.[key] ?? key).toString();
     };
-    
+
     const tHtml = (key: string) => {
         return { __html: translations[lang]?.[key] || key };
     };
@@ -55,7 +55,7 @@ const Home: React.FC = () => {
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('payment') === 'success') {
-            window.postMessage({ type: "PAYMENT_SUCCESS" }, "*");
+            window.postMessage({ type: "PAYMENT_SUCCESS" }, window.location.origin);
             // Optional: Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
             alert("Payment successful! Your credits have been updated.");
@@ -88,11 +88,11 @@ const Home: React.FC = () => {
             if (element) {
                 element.scrollIntoView({ behavior: 'smooth' });
             } else {
-                 // Retry once after short delay for slower renders
-                 setTimeout(() => {
+                // Retry once after short delay for slower renders
+                setTimeout(() => {
                     const el = document.querySelector(window.location.hash);
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
-                 }, 500);
+                }, 500);
             }
         }
     }, [lang, user]); // Re-run when content might have changed/loaded
@@ -176,7 +176,7 @@ const Home: React.FC = () => {
 
             <footer>
                 <p>&copy; 2025 WebWardrobe. All rights reserved.</p>
-                <p style={{fontSize: '12px', color: '#444', marginTop: '10px'}}>{t('legalText')}</p>
+                <p style={{ fontSize: '12px', color: '#444', marginTop: '10px' }}>{t('legalText')}</p>
             </footer>
         </div>
     );

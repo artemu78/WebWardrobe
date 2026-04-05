@@ -326,6 +326,23 @@ Resources:
             Method: GET
 
   # -------------------------------------------------------------------------
+  # Version Lambda
+  # -------------------------------------------------------------------------
+  VersionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: dispatcher_lambda.version_handler
+      Runtime: python3.9
+      Events:
+        VersionTrigger:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TryOnApi
+            Path: /version
+            Method: GET
+
+  # -------------------------------------------------------------------------
   # S3 Bucket
   # -------------------------------------------------------------------------
   TryOnBucket:

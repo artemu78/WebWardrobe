@@ -33,3 +33,10 @@ extension/.DS_Store
 extension/web-wardrobe-chrome*
 
 node_modules/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

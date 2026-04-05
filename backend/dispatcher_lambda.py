@@ -17,6 +17,7 @@ s3_client = boto3.client('s3')
 import urllib.request
 
 PRICE_PER_CREDIT = 32
+BACKEND_VERSION = "1.0.0"
 
 def get_user_id_from_token(event):
     """
@@ -1350,4 +1351,18 @@ def get_payment_url_handler(event, context):
     return {
         'statusCode': 200,
         'body': json.dumps("https://web-wardrobe.netlify.app/")
+    }
+
+def version_handler(event, context):
+    """
+    Returns the backend code version.
+    """
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'application/json'
+        },
+        'body': json.dumps({
+            'version': BACKEND_VERSION
+        })
     }
