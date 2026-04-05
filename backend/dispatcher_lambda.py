@@ -810,21 +810,19 @@ def generator_handler(event, context):
         selfie_b64 = download_as_base64(selfie_url)
 
         # Construct Payload for Gemini
+        # Note: imageConfig with aspectRatio/imageSize is NOT supported by Gemini API
+        # and causes 400 INVALID_ARGUMENT errors
         payload = {
             "contents": [{
                 "parts": [
-                    {"text": "Blend Image A and Image B. In the result, the person from Image A should be seamlessly wearing the clothes from Image B. Maintain the facial features, pose, and lighting from Image A, but precisely transfer the clothing, textures, and colors from Image B onto the person. Use a photorealistic style, with natural shadows and details. Keep the background from Image A. For reference inputs: Image A is the source character, Image B provides the clothing."},
                     {"inline_data": {"mime_type": "image/jpeg", "data": selfie_b64}},
-                    {"inline_data": {"mime_type": "image/jpeg", "data": item_b64}}
+                    {"inline_data": {"mime_type": "image/jpeg", "data": item_b64}},
+                    {"text": "Take the first image (the person) and dress them in the clothing from the second image. Maintain the person's facial features, pose, and lighting from the first image. Transfer the clothing, textures, and colors from the second image onto the person in a photorealistic style with natural shadows and details. Keep the background from the first image."}
                 ]
             }],
-             "generationConfig": {
-                "responseModalities": ["IMAGE"],
-                "imageConfig": {
-                  "aspectRatio": "3:4",
-                  "imageSize": "1024x1024" 
-                }
-              }
+            "generationConfig": {
+                "responseModalities": ["IMAGE"]
+            }
         }
         
         print("Calling Gemini API...")
@@ -848,19 +846,29 @@ def generator_handler(event, context):
                     print(f"Gemini 503 Unavailable. Retrying in {wait_time}s...")
                     time.sleep(wait_time)
                 else:
-                    raise e
+                    error_body = e.read().decode('utf-8')
+                    try:
+                        # Parse and re-dump to ensure it is a single line
+                        parsed_error = json.loads(error_body)
+                        compact_error = json.dumps(parsed_error, separators=(',', ':'))
+                    except Exception:
+                        # Fallback if not valid JSON
+                        compact_error = error_body.replace('\n', ' ').replace('\r', '')
+                    
+                    print(f"Gemini API Error {e.code}: {compact_error}")
+                    raise Exception(f"Gemini API returned {e.code}: {compact_error}")
             
         # Extract Image
         candidates = response_data.get('candidates', [])
         if not candidates:
-            print("Gemini Response:", response_data)
+            print(f"Gemini Response: {json.dumps(response_data, separators=(',', ':'))}")
             raise Exception("No candidates returned from Gemini")
             
         parts = candidates[0].get('content', {}).get('parts', [])
         image_b64 = next((p['inlineData']['data'] for p in parts if 'inlineData' in p), None)
         
         if not image_b64:
-             print("Gemini Response:", response_data)
+             print(f"Gemini Response: {json.dumps(response_data, separators=(',', ':'))}")
              raise Exception("No image found in Gemini response")
 
         # Decode and Save to S3

@@ -28,8 +28,14 @@ dist/
 extension.pem
 extension.crx
 extension/node_modules
+extension/dist
+extension/coverage
 extension/archives
 extension/.DS_Store
 extension/web-wardrobe-chrome*
 
 node_modules/
+playwright-report/
+coverage/
+.coverage/
+test-results/
