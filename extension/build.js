@@ -2,7 +2,7 @@ const { spawn } = require("child_process");
 const fs = require('fs');
 const path = require('path');
 
-// const BUILD_FOLDER = 'dist';
+const BUILD_FOLDER = 'dist';
 const ARCHIVE_FOLDER = 'archives';
 
 function prepareFolder(folder) {
@@ -15,13 +15,15 @@ function prepareFolder(folder) {
 
 function runEsbuild() {
   console.log("Run build");
-  // const buildPath = prepareFolder(BUILD_FOLDER);
+  const buildPath = prepareFolder(BUILD_FOLDER);
   const archivePath = prepareFolder(ARCHIVE_FOLDER);
 
-  // runProcess("options.ts", path.join(buildPath, "options.js"));
-  // runProcess("content.ts", path.join(buildPath, "content.js"));
-  // runProcess("background.ts", path.join(buildPath, "out.js"));
-  // fs.copyFileSync("options.html", path.join(buildPath, "options.html"));
+  fs.copyFileSync("popup.html", path.join(buildPath, "popup.html"));
+  fs.copyFileSync("popup.js", path.join(buildPath, "popup.js"));
+  fs.copyFileSync("background.js", path.join(buildPath, "background.js"));
+  fs.copyFileSync("content.js", path.join(buildPath, "content.js"));
+  fs.copyFileSync("manifest.json", path.join(buildPath, "manifest.json"));
+
   fs.copyFileSync("popup.html", path.join(archivePath, "popup.html"));
   fs.copyFileSync("popup.js", path.join(archivePath, "popup.js"));
   fs.copyFileSync("background.js", path.join(archivePath, "background.js"));

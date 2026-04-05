@@ -31,6 +31,12 @@ exports[`Extension Popup Snapshot: Initial State (Logged Out) 1`] = `
     
     </button>
     
+    
+    <p
+      class="text-sm text-center text-red-500 mt-4"
+      id="auth-error-msg"
+    />
+    
 
   </div>
   
@@ -487,6 +493,12 @@ exports[`Extension Popup Snapshot: Logged In State with Images 1`] = `
         Sign in with Google
     
     </button>
+    
+    
+    <p
+      class="text-sm text-center text-red-500 mt-4"
+      id="auth-error-msg"
+    />
     
 
   </div>

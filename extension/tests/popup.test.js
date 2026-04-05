@@ -91,10 +91,6 @@ describe('Extension Popup', () => {
 
         expect(chrome.identity.getAuthToken).toHaveBeenCalledWith({ interactive: true }, expect.any(Function));
 
-        // Should switch to main section and load images
-        // Since loadImages is async, we might need to wait or mock fetch appropriately first
-        // But checking immediate UI calls
-
         expect(localStorage.removeItem).toHaveBeenCalledWith('signedOut');
         expect(document.getElementById('auth-section').classList.contains('hidden')).toBe(true);
         expect(document.getElementById('main-section').classList.contains('hidden')).toBe(false);
@@ -102,6 +98,33 @@ describe('Extension Popup', () => {
         expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/user/images'), expect.anything());
         expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/user/generations'), expect.anything());
         expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({ action: "refreshContextMenu" });
+    });
+
+    test('Login flow: failure', () => {
+        chrome.identity.getAuthToken.mockImplementation(({ interactive }, callback) => {
+            if (interactive) {
+                chrome.runtime.lastError = { message: "bad client id: 123" };
+                callback();
+            }
+        });
+
+        loadPopup(); // Attach listeners
+
+        const loginBtn = document.getElementById('login-btn');
+        const errorMsg = document.getElementById('auth-error-msg');
+        loginBtn.click();
+
+        expect(chrome.identity.getAuthToken).toHaveBeenCalledWith({ interactive: true }, expect.any(Function));
+
+        // Error message should be displayed
+        expect(errorMsg.textContent).toBe("bad client id: 123");
+
+        // Should not switch to main section
+        expect(document.getElementById('auth-section').classList.contains('hidden')).toBe(false);
+        expect(document.getElementById('main-section').classList.contains('hidden')).toBe(true);
+
+        // Reset runtime.lastError to avoid side effects
+        chrome.runtime.lastError = undefined;
     });
 
     test('Auto-login if not signed out', () => {

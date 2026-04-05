@@ -29,9 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   loginBtn.addEventListener('click', () => {
+    const authErrorMsg = document.getElementById('auth-error-msg');
+    if (authErrorMsg) authErrorMsg.textContent = ''; // clear previous errors
+
     chrome.identity.getAuthToken({ interactive: true }, function (token) {
       if (chrome.runtime.lastError) {
         console.error(chrome.runtime.lastError);
+        if (authErrorMsg) {
+          authErrorMsg.textContent = chrome.runtime.lastError.message || "Failed to sign in.";
+        }
         return;
       }
       showMain(token);

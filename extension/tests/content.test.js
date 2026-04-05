@@ -117,7 +117,7 @@ describe('content.js', () => {
             expect(wrapper).toBeTruthy();
             expect(wrapper.contains(img)).toBe(true);
 
-            const overlay = wrapper.querySelector(`[id="webwardrobe-overlay-${testUrl}"]`);
+            const overlay = wrapper.querySelector(`[data-original-url="${testUrl}"]`);
             expect(overlay).toBeTruthy();
             expect(overlay.textContent).toBe('Processing Try-On...');
         });
@@ -168,7 +168,7 @@ describe('content.js', () => {
             const wrappers = document.querySelectorAll('[data-webwardrobe-wrapper="true"]');
             expect(wrappers.length).toBe(1);
 
-            const overlays = document.querySelectorAll(`[id="webwardrobe-overlay-${testUrl}"]`);
+            const overlays = document.querySelectorAll(`[data-original-url="${testUrl}"]`);
             expect(overlays.length).toBe(1);
         });
 
@@ -183,7 +183,7 @@ describe('content.js', () => {
                 resultUrl: resultUrl
             }, {}, jest.fn());
 
-            const overlay = document.querySelector(`[id="webwardrobe-overlay-${testUrl}"]`);
+            const overlay = document.querySelector(`[data-original-url="${testUrl}"]`);
             expect(overlay).toBeNull();
             expect(img.src).toBe(resultUrl);
             expect(img.style.opacity).toBe('0.5'); // check transition start
@@ -200,9 +200,9 @@ describe('content.js', () => {
                 error: errorMsg
             }, {}, jest.fn());
 
-            const overlay = document.querySelector(`[id="webwardrobe-overlay-${testUrl}"]`);
+            const overlay = document.querySelector(`[data-original-url="${testUrl}"]`);
             expect(overlay.textContent).toContain(errorMsg);
-            expect(overlay.style.backgroundColor).toContain('rgba(255, 0, 0, 0.9)');
+            expect(overlay.style.backgroundColor).toContain('rgba(180, 0, 0, 0.9)');
         });
 
         test('SHOW_ERROR: should alert if overlay missing', () => {
@@ -221,10 +221,10 @@ describe('content.js', () => {
             messageHandler({ action: 'SHOW_PROCESSING', originalUrl: testUrl }, {}, jest.fn());
             messageHandler({ action: 'SHOW_ERROR', originalUrl: testUrl, error: 'Fail' }, {}, jest.fn());
 
-            const overlay = document.querySelector(`[id="webwardrobe-overlay-${testUrl}"]`);
+            const overlay = document.querySelector(`[data-original-url="${testUrl}"]`);
             overlay.click();
 
-            expect(document.querySelector(`[id="webwardrobe-overlay-${testUrl}"]`)).toBeNull();
+            expect(document.querySelector(`[data-original-url="${testUrl}"]`)).toBeNull();
         });
 
         test('SHOW_TOPUP_PROMPT: should show insufficient credits', async () => {
@@ -234,7 +234,7 @@ describe('content.js', () => {
             }, {}, jest.fn());
 
             const wrapper = document.querySelector('[data-webwardrobe-wrapper="true"]');
-            const overlay = wrapper.querySelector(`[id="webwardrobe-overlay-${testUrl}"]`);
+            const overlay = wrapper.querySelector(`[data-original-url="${testUrl}"]`);
 
             expect(overlay.textContent).toContain('Insufficient Credits');
 
@@ -258,11 +258,11 @@ describe('content.js', () => {
                 originalUrl: testUrl
             }, {}, jest.fn());
 
-            const overlay = document.querySelector(`[id="webwardrobe-overlay-${testUrl}"]`);
+            const overlay = document.querySelector(`[data-original-url="${testUrl}"]`);
             const closeDiv = Array.from(overlay.querySelectorAll('div')).find(d => d.textContent === 'Cancel');
 
             closeDiv.click();
-            expect(document.querySelector(`[id="webwardrobe-overlay-${testUrl}"]`)).toBeNull();
+            expect(document.querySelector(`[data-original-url="${testUrl}"]`)).toBeNull();
         });
 
         test('ensureImageWrapper: should handle display block', () => {
@@ -324,7 +324,7 @@ describe('content.js', () => {
             }, {}, jest.fn());
 
             const wrapper = document.querySelector('[data-webwardrobe-wrapper="true"]');
-            const overlay = wrapper.querySelector(`[id="webwardrobe-overlay-${testUrl}"]`);
+            const overlay = wrapper.querySelector(`[data-original-url="${testUrl}"]`);
 
             // Wait for fetch
             await Promise.resolve();
@@ -350,7 +350,7 @@ describe('content.js', () => {
                 action: 'SHOW_TOPUP_PROMPT',
                 originalUrl: testUrl
             }, {}, jest.fn());
-            const overlay2 = wrapper.querySelector(`[id="webwardrobe-overlay-${testUrl}"]`);
+            const overlay2 = wrapper.querySelector(`[data-original-url="${testUrl}"]`);
             const closeDiv2 = Array.from(overlay2.querySelectorAll('div')).find(d => d.textContent === 'Cancel');
 
             const closeClickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });

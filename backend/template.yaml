@@ -15,7 +15,7 @@ Parameters:
   NanoBananaApiUrl:
     Type: String
     Description: "URL for the Nano-Banana Service"
-    Default: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent"
+    Default: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
 
   ProdamusSecretKey:
     Type: String

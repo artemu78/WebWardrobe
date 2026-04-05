@@ -761,8 +761,34 @@ def status_handler(event, context):
         # Update timestamp to reflect current server time as requested
         item['timestamp'] = datetime.datetime.utcnow().isoformat()
 
+        status_code = 200
+        if item.get('status') == 'FAILED':
+            status_code = 500
+            error_msg = str(item.get('error', ''))
+            
+            import re
+            # Try to extract the Gemini API HTTP code
+            match = re.search(r"Gemini API returned (\d+):", error_msg)
+            if match:
+                status_code = int(match.group(1))
+            else:
+                # Fallback to search for a code inside JSON
+                match_json = re.search(r'"code":\s*(\d+)', error_msg)
+                if match_json:
+                    status_code = int(match_json.group(1))
+            
+            # Clean up the error message for the frontend
+            gemini_match = re.search(r"Gemini API returned \d+: ({.*})", error_msg, re.DOTALL)
+            if gemini_match:
+                try:
+                    gemini_err_json = json.loads(gemini_match.group(1))
+                    if 'error' in gemini_err_json and 'message' in gemini_err_json['error']:
+                        item['error'] = f"API Error: {gemini_err_json['error']['message']}"
+                except:
+                    pass
+
         return {
-            'statusCode': 200,
+            'statusCode': status_code,
             'body': json.dumps(item)
         }
 
@@ -844,12 +870,14 @@ def generator_handler(event, context):
                     response_data = json.loads(response.read().decode('utf-8'))
                     break # Success
             except urllib.error.HTTPError as e:
+                error_body = e.read().decode('utf-8')
+                print(f"Gemini API Error {e.code}: {error_body}")
                 if e.code == 503 and attempt < max_retries - 1:
                     wait_time = (2 ** attempt) * 1 # 1, 2, 4, 8, 16 seconds
                     print(f"Gemini 503 Unavailable. Retrying in {wait_time}s...")
                     time.sleep(wait_time)
                 else:
-                    raise e
+                    raise Exception(f"Gemini API returned {e.code}: {error_body}")
             
         # Extract Image
         candidates = response_data.get('candidates', [])
@@ -907,6 +935,23 @@ def saver_handler(event, context):
         if event.get('status') == 'FAILED':
             error_info = event.get('error', {})
             error_msg = str(error_info)
+            
+            # Try to extract a cleaner message from Step Functions errorInfo
+            if isinstance(error_info, dict):
+                cause = error_info.get('Cause')
+                if cause:
+                    try:
+                        cause_json = json.loads(cause)
+                        error_msg = cause_json.get('errorMessage', error_msg)
+                    except:
+                        # Fallback to Cause string if not JSON
+                        error_msg = cause
+                elif error_info.get('Error'):
+                    error_msg = f"{error_info['Error']}: {error_info.get('Cause', '')}"
+
+            # Limit error message length for UI
+            if len(error_msg) > 500:
+                error_msg = error_msg[:497] + "..."
             
             table.update_item(
                 Key={'jobId': job_id},

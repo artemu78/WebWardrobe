@@ -87,36 +87,37 @@ if (window.webWardrobeContentScriptInjected) {
         if (action === "SHOW_PROCESSING") {
           const wrapper = ensureImageWrapper(img);
 
-          // Check if overlay already exists
-          if (wrapper.querySelector(`div[id="webwardrobe-overlay-${originalUrl}"]`)) return;
+          // Check if overlay already exists using a unique-ish selector
+          if (wrapper.querySelector(`div[data-original-url="${originalUrl}"]`)) return;
 
           const overlay = document.createElement('div');
-          overlay.id = `webwardrobe-overlay-${originalUrl}`;
+          overlay.setAttribute('data-original-url', originalUrl);
           overlay.style.position = 'absolute';
           overlay.style.top = '0';
           overlay.style.left = '0';
           overlay.style.width = '100%';
           overlay.style.height = '100%';
-          overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+          overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
           overlay.style.color = 'white';
           overlay.style.display = 'flex';
           overlay.style.justifyContent = 'center';
           overlay.style.alignItems = 'center';
-          overlay.style.fontSize = '16px';
-          overlay.style.fontWeight = 'bold';
+          overlay.style.fontSize = '14px';
+          overlay.style.fontWeight = '500';
           overlay.style.zIndex = '1000';
-          overlay.style.padding = '10px';
+          overlay.style.padding = '15px';
           overlay.style.textAlign = 'center';
           overlay.style.wordBreak = 'break-word';
-          overlay.style.overflowY = 'auto'; // Handle scroll within overlay
+          overlay.style.overflowY = 'auto';
+          overlay.style.boxSizing = 'border-box';
+          overlay.style.lineHeight = '1.4';
           overlay.textContent = 'Processing Try-On...';
 
           wrapper.appendChild(overlay);
 
         } else if (action === "REPLACE_IMAGE") {
           // Remove overlay if exists
-          // Since we wrap, the overlay is a sibling of img, inside wrapper
-          const overlay = img.parentNode.querySelector(`div[id="webwardrobe-overlay-${originalUrl}"]`);
+          const overlay = img.parentNode.querySelector(`div[data-original-url="${originalUrl}"]`);
           if (overlay) overlay.remove();
 
           img.src = resultUrl;
@@ -127,20 +128,19 @@ if (window.webWardrobeContentScriptInjected) {
 
         } else if (action === "SHOW_ERROR") {
           // Update overlay to show error
-          const overlay = document.getElementById(`webwardrobe-overlay-${originalUrl}`);
+          const overlay = img.parentNode.querySelector(`div[data-original-url="${originalUrl}"]`);
 
           if (overlay) {
-            overlay.style.backgroundColor = 'rgba(255, 0, 0, 0.9)'; // Darker red
-            overlay.textContent = (error || 'Try-On Failed') + '\n(Click to dismiss)';
+            overlay.style.backgroundColor = 'rgba(180, 0, 0, 0.9)'; // Deep red
+            overlay.style.fontSize = '12px';
+            overlay.style.whiteSpace = 'pre-wrap';
+            overlay.textContent = (error || 'Try-On Failed') + '\n\n(Click to dismiss)';
             overlay.style.cursor = 'pointer';
             overlay.title = "Click to dismiss";
 
-            // Make it persistent (remove auto-hide if any)
             overlay.onclick = () => overlay.remove();
           } else {
             // Fallback: try to create a new error overlay if none exists
-            // This might happen if SHOW_PROCESSING wasn't called (fast fail)
-            // For now, consistent with previous behavior + alert fallback
             alert(`WebWardrobe Error: ${error}`);
           }
 
@@ -148,11 +148,11 @@ if (window.webWardrobeContentScriptInjected) {
           const wrapper = ensureImageWrapper(img);
 
           // Remove previous overlay if exists
-          const oldOverlay = wrapper.querySelector(`div[id="webwardrobe-overlay-${originalUrl}"]`);
+          const oldOverlay = wrapper.querySelector(`div[data-original-url="${originalUrl}"]`);
           if (oldOverlay) oldOverlay.remove();
 
           const overlay = document.createElement('div');
-          overlay.id = `webwardrobe-overlay-${originalUrl}`;
+          overlay.setAttribute('data-original-url', originalUrl);
           overlay.style.position = 'absolute';
           overlay.style.top = '0';
           overlay.style.left = '0';

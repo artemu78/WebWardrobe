@@ -263,9 +263,16 @@ function pollStatus(jobId, originalUrl, tabId, frameId) {
 
     try {
       const response = await fetch(`${API_BASE_URL}/status/${jobId}`);
-      if (!response.ok) return; // Wait for next poll
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (err) {
+        // If it's not JSON (e.g. 502 Bad Gateway HTML), just wait for next poll
+        if (!response.ok) return;
+        throw err;
+      }
 
-      const data = await response.json();
       if (data.status === 'COMPLETED') {
         clearInterval(intervalId);
 
