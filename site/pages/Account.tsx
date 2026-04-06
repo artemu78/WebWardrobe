@@ -190,7 +190,7 @@ const Account: React.FC = () => {
                                 </div>
                                 <div className="generation-info" style={{transform: 'translateY(0)', position: 'absolute', bottom: 0, width: '100%', padding: '15px', background: 'white', borderTop: '1px solid #eee'}}>
                                     <div className="generation-title" title={gen.siteTitle}>{gen.siteTitle || 'Generated Style'}</div>
-                                    <a href={gen.itemUrl} target="_blank" rel="noopener noreferrer" className="generation-link">
+                                    <a href={gen.siteUrl} target="_blank" rel="noopener noreferrer" className="generation-link">
                                         {t('viewItem')} <ExternalLink size={12} />
                                     </a>
                                 </div>
