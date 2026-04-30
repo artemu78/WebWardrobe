@@ -1,6 +1,6 @@
 {
     "name": "webwardrobe-monorepo",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "private": true,
     "workspaces": [
         "site",
@@ -12,5 +12,8 @@
         "test:extension": "npm run test -w extension",
         "build:site": "npm run build -w site",
         "dev:site": "npm run dev -w site"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.52.0"
     }
 }
